@@ -9,8 +9,23 @@
 extern "C" {
 #endif
 
+
+#include "sysinc.h"
+
+#include "glbtypes.h"
+
+//mqtt client 库头文件
+#include "../lib/mongoose/mongoose.h"
+
+
 typedef struct _mqtt_config_struct_t {
-    char*
+    char*   s_address;
+    size_t  s_address_len;
+    char*   s_username;
+    size_t  s_username_len;
+    char*   s_password;
+    size_t  s_password_len;
+
 }MQTT_CONFIG;
 
 extern MQTT_CONFIG* init_mqtt_config();
