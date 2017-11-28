@@ -34,7 +34,11 @@
 #endif
 
 #ifndef ST_VOID_PTR
-#define ST_VOID_PTR ST_VOID*
+#define ST_VOID_PTR void*
+#endif
+
+#ifndef ST_CHAR
+#define ST_CHAR char
 #endif
 
 #endif //IOTSEED_SDKS_CORE_GLBTYPES_H

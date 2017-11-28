@@ -5,90 +5,95 @@
 #include "mqtt.h"
 #include "str_util.h"
 
+#include <atomic>
+#include <thread>
 
-struct mg_mgr* g_pMqttMsg = nullptr;
+struct mg_mgr* g_pMqttManager = nullptr;
 
-struct mg_connection *g_pConnection = nullptr;
+static std::atomic<bool> end(false); //原子标示符
 
-static int create_global_msg(void) {
-    int ret = 0;
-    if (nullptr != g_pMqttMsg) {
-        return 0;
+static std::thread *g_ThreadPool = nullptr;
+
+static ST_RET create_global_manager(void) {
+    if (nullptr != g_pMqttManager) {
+        return SD_SUCCESS;
     }
-    g_pMqttMsg = (mg_mgr*)calloc(1, sizeof(struct mg_mgr));
-    if (nullptr == g_pMqttMsg) {
-        ret = -1;
+    g_pMqttManager = (mg_mgr*)calloc(1, sizeof(struct mg_mgr));
+    if (nullptr == g_pMqttManager) {
+        return SD_FAILURE;
     }
 
-    mg_mgr_init(g_pMqttMsg, nullptr);
+    mg_mgr_init(g_pMqttManager, nullptr);
 
-    return ret;
+    return SD_SUCCESS;
 }
 
-static ST_RET free_global_msg() {
+static ST_RET destroy_global_manager(void) {
     ST_RET ret = 0;
-    if (nullptr != g_pMqttMsg) {
+    if (nullptr != g_pMqttManager) {
         return ret;
     }
 
-    mg_mgr_free(g_pMqttMsg);
+    mg_mgr_free(g_pMqttManager);
 
-    free(g_pMqttMsg);
+    free(g_pMqttManager);
 
-    g_pMqttMsg = nullptr;
+    g_pMqttManager = nullptr;
 
     return ret;
 }
 
 
-int destory_mqtt_config(MQTT_CONFIG** config){
+ST_RET destory_mqtt_config(MQTT_CONFIG** config){
     auto lConfig = *config;
     if (nullptr == lConfig){
-        return 0;
-    }
-
-    if(lConfig->s_address){
-        free_string(&(lConfig->s_address));
+        return SD_SUCCESS;
     }
 
     free(*config);
     *config = nullptr;
-    return 0;
+    return SD_SUCCESS;
 
 }
 
 
-MQTT_CONFIG* init_mqtt_config(const char* s_address, const char* s_username= nullptr, const char* s_password= nullptr){
+MQTT_CONFIG* init_mqtt_config(const char* s_address, const char* s_username, const char* s_password, const TOPIC *s_topics, const int topics_size){
     if(nullptr == s_address || isAllWhitespace(s_address)){
-        return nullptr;
+        fprintf(stderr, "MQTT Broker地址为必填参数\n");
+        exit(1);
     }
-    auto config = (MQTT_CONFIG*)calloc(1, sizeof(MQTT_CONFIG));
+    if(strlen(s_address) > ADDRESS_MAX_LEN || strlen(s_username) > USENAME_MAX_LEN || strlen(s_password) > PWD_MAX_LEN || topics_size > TOPICS_MAX_NUM){
+        fprintf(stderr, "请检查参数是否长度超限\n");
+        exit(1);
+    }
 
-    config->s_address_len = strlen(s_address) + 1;
-    config->s_address = (char *)create_string(config->s_address_len, s_address);
+    auto config = new MQTT_CONFIG();
 
+    strncpy(config->s_address, s_address, strlen(s_address) + 1);
 
     if(nullptr != s_username && !isAllWhitespace(s_username)){
-        config->s_username_len = strlen(s_username) + 1;
-        config->s_username = (char *)create_string(config->s_username_len, s_username);
+        strncpy(config->s_username, s_username, strlen(s_username) + 1);
     }
 
 
     if(nullptr != s_password && !isAllWhitespace(s_password)){
-        config->s_password_len = strlen(s_password) + 1;
-        config->s_password = (char *)create_string(config->s_password_len, s_password);
+        strncpy(config->s_password, s_password, strlen(s_password) + 1);
     }
 
+    for(int i=0 ; i < topics_size; ++i){
+        strncpy(config->sub_topics[i], s_topics[i], strlen(s_topics[i]) + 1);
+    }
+
+    config->topics_size = topics_size;
 
     return config;
 
-destory:
-    return nullptr;
 }
 
 
-static void ev_handler(struct mg_connection *nc, int ev, void *p) {
+static void ev_handler(struct mg_connection *nc, int ev, void *p, void* user_data) {
     struct mg_mqtt_message *msg = (struct mg_mqtt_message *) p;
+    MQTT_CONFIG* config = (MQTT_CONFIG*)user_data;
     (void) nc;
 
     if (ev != MG_EV_POLL) printf("USER HANDLER GOT EVENT %d\n", ev);
@@ -97,11 +102,11 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p) {
         case MG_EV_CONNECT: {
             struct mg_send_mqtt_handshake_opts opts;
             memset(&opts, 0, sizeof(opts));
-            opts.user_name = s_user_name;
-            opts.password = s_password;
+            opts.user_name = config->s_username;
+            opts.password = config->s_password;
 
             mg_set_protocol_mqtt(nc);
-            mg_send_mqtt_handshake_opt(nc, "dummy", opts);
+            mg_send_mqtt_handshake_opt(nc, "iotseed", opts);
             break;
         }
         case MG_EV_MQTT_CONNACK:
@@ -109,9 +114,6 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p) {
                 printf("Got mqtt connection error: %d\n", msg->connack_ret_code);
                 exit(1);
             }
-            s_topic_expr.topic = rpc_s_topic;
-            printf("Subscribing to '%s'\n", rpc_s_topic);
-            mg_mqtt_subscribe(nc, &s_topic_expr, 1, 42);
             break;
         case MG_EV_MQTT_PUBACK:
             printf("Message publishing acknowledged (msg_id: %d)\n", msg->message_id);
@@ -141,41 +143,110 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p) {
 }
 
 
-int create_mqtt_client(const MQTT_CONFIG* config){
+static void thread_task(){
+    while(!end.load()) {
+        mg_mgr_poll(g_pMqttManager, 1000);
+    }
+}
+
+
+
+
+
+ST_RET create_mqtt_client(const MQTT_CONFIG* config){
     if(nullptr == config){
         return SD_FAILURE;
     }
-    int ret = create_global_msg();
+    ST_RET ret = create_global_manager();
     if (ret < 0) {
-        printf("创建全局Msg失败\n");
+        printf("创建全局消息管理者失败\n");
         return ret;
     }
-
-    if ((g_pConnection = mg_connect(g_pMqttMsg, config->s_address, ev_handler)) == nullptr) {
-        fprintf(stderr, "mg_connect(%s) failed\n", config->s_address);
-        exit(EXIT_FAILURE);
-    }
-
 
     return ret;
 }
 
 
-//非线程安全
-ST_RET mqtt_publish_msg(const char* topic, const char* msg, const int qos=0){
-    if(nullptr == g_pConnection)
+ST_RET mqtt_connect(MQTT_CONFIG* config, mg_event_handler_t handler)
+{
+    if ((config->nc = mg_connect(g_pMqttManager, config->s_address, handler, (void*)config)) == nullptr) {
+        fprintf(stderr, "mg_connect(%s) failed\n", config->s_address);
         return SD_FAILURE;
-    mg_mqtt_publish(g_pConnection, topic, 65, MG_MQTT_QOS(qos), msg,
+    }
+
+    if(nullptr == g_ThreadPool){
+        g_ThreadPool = new std::thread(thread_task);
+
+    }
+
+    return SD_SUCCESS;
+}
+
+
+static ST_RET mqtt_wait_disconnect(void){
+
+    end.exchange(true); //设定标签为true;
+
+    if(nullptr != g_ThreadPool){
+        g_ThreadPool->join();
+        g_ThreadPool = nullptr;
+    }
+
+    return SD_SUCCESS;
+}
+
+
+/*!
+ *
+ * @param config mqtt 配置结构体指针
+ * @return
+ */
+ST_RET destory_mqtt_client(MQTT_CONFIG* config){
+
+    if(nullptr != config->nc){
+        mg_mqtt_disconnect(config->nc); // 尝试发送断开连接的请求
+    }
+
+    mqtt_wait_disconnect();
+
+    if(nullptr != config){
+        destory_mqtt_config(&config);
+    }
+
+    ST_RET ret = destroy_global_manager();
+    if (ret != SD_SUCCESS) {
+        printf("清除全局消息管理者失败\n");
+        return ret;
+    }
+
+}
+
+
+//非线程安全
+ST_RET mqtt_publish_msg(struct mg_connection * nc,const char* topic, const char* msg, const int qos){
+    if(nullptr == nc)
+        return SD_FAILURE;
+    mg_mqtt_publish(nc, topic, 65, MG_MQTT_QOS(qos), msg,
                     strlen(msg) + 1);
 
-    return 0;
+    return SD_SUCCESS;
 }
 
-int mqtt_wait_disconnect(void){
+ST_RET mqtt_subscribe_msg(struct mg_connection * nc,const char* topic,const int msg_id, const int qos){
+    struct mg_mqtt_topic_expression s_topic_expr = {topic, qos};
 
+    if(nullptr == nc || nullptr == topic){
+        fprintf(stderr,"mqtt订阅失败\n");
+        return SD_FAILURE;
+    }
+
+    printf("Subscribing to '%s'\n", topic);
+    mg_mqtt_subscribe(nc, &s_topic_expr, 1, (uint16_t)msg_id);
+    return SD_SUCCESS;
 }
 
-ST_RET destory_mqtt_client(){
 
-}
+
+
+
 
