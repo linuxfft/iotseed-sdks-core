@@ -57,6 +57,10 @@ extern ST_RET destory_mqtt_client(MQTT_CONFIG* config);
 
 extern ST_RET mqtt_publish_msg(struct mg_connection * nc,const char* topic, const char* msg, const int qos);
 
+extern ST_RET set_connected(void);
+
+extern ST_RET is_connected(void);
+
 
 /*!
  *

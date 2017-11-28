@@ -43,8 +43,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p,void* user_data
             for(int i = 0; i < config->topics_size; ++i){
                 mqtt_subscribe_msg(config->nc,config->sub_topics[i],1000, qos);
             }
-
-
+            set_connected();
             break;
         case MG_EV_MQTT_PUBACK:
             printf("Message publishing acknowledged (msg_id: %d)\n", msg->message_id);
@@ -76,6 +75,26 @@ static void signal_handler(int sig_num) {
     signal(sig_num, signal_handler);  // Reinstantiate signal handler
     end = 1;
 }
+
+
+
+void *worker_thread_proc(void *param) {
+    MQTT_CONFIG *config = (MQTT_CONFIG *) param;
+    struct mg_connection *nc = config->nc;
+
+
+    while (!end) {
+        char* msg = "demo data";
+        if (is_connected()){
+            mg_mqtt_publish(nc, "empoweriot/devices/123/rpc/requests", 65, MG_MQTT_QOS(0), msg,
+                            strlen(msg) + 1);
+        }
+        sleep(1);
+    }
+    return NULL;
+}
+
+
 
 int main(int argc, char **argv) {
     ST_RET ret;
@@ -114,6 +133,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "连接mqtt broker失败\n");
         exit(1);
     }
+
+    mg_start_thread(worker_thread_proc, config);
 
 
     while (!end){

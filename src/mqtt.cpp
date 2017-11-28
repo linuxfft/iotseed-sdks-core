@@ -12,6 +12,8 @@ struct mg_mgr* g_pMqttManager = nullptr;
 
 static std::atomic<bool> end(false); //原子标示符
 
+static std::atomic<bool> connected(false);
+
 static std::thread *g_ThreadPool = nullptr;
 
 static ST_RET create_global_manager(void) {
@@ -150,7 +152,13 @@ static void thread_task(){
 }
 
 
+ST_RET set_connected(void){
+    connected.exchange(true);
+}
 
+ST_RET is_connected(void){
+    return connected.load();
+}
 
 
 ST_RET create_mqtt_client(const MQTT_CONFIG* config){
