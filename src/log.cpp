@@ -112,7 +112,7 @@ ST_RET create_spd_logger(LOGGER* pLogger, const char* name, const char *path, co
 
     strncpy(pLogger->config->name, name, strlen(name) + 1);
 
-    logger->set_pattern(pLogger->config->pattern);
+    logger->set_pattern(LOG_PATTERN_DEFAULT);
 
     if(pLogger->config->aync_mode && judge_is_log2((int)pLogger->config->queue_size) ){
         spd::set_async_mode(pLogger->config->queue_size);
@@ -180,9 +180,10 @@ LOGGER* create_daily_log(const char *name, const char *path, const int hour, con
 }
 
 
-ST_VOID destroy_logger(LOGGER **log){
-    destroy_log_config(&((*log)->config));
-    delete(*log);
+ST_VOID destroy_logger(ST_VOID_PTR *log){
+    LOGGER **local_log = (LOGGER **)log;
+    destroy_log_config(&((*local_log)->config));
+    delete(*local_log);
     *log = nullptr;
 }
 

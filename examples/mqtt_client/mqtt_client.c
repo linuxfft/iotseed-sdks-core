@@ -76,8 +76,6 @@ static void signal_handler(int sig_num) {
     end = 1;
 }
 
-
-
 void *worker_thread_proc(void *param) {
     MQTT_CONFIG *config = (MQTT_CONFIG *) param;
     struct mg_connection *nc = config->nc;
@@ -86,8 +84,7 @@ void *worker_thread_proc(void *param) {
     while (!end) {
         char* msg = "demo data";
         if (is_connected()){
-            mg_mqtt_publish(nc, "empoweriot/devices/123/rpc/requests", 65, MG_MQTT_QOS(0), msg,
-                            strlen(msg) + 1);
+            mqtt_publish_msg(nc,"empoweriot/devices/123/rpc/requests",msg,0);
         }
         sleep(1);
     }
@@ -134,10 +131,14 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    mg_start_thread(worker_thread_proc, config);
+//    mg_start_thread(worker_thread_proc, config);
 
 
+    struct mg_connection *nc = config->nc;
     while (!end){
+        if (is_connected()){
+            mqtt_publish_msg(nc,"empoweriot/devices/123/rpc/requests","demo data",0);
+        }
         sleep(1);
     }
 

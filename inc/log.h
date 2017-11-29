@@ -31,6 +31,10 @@ extern "C" {
 #define LOG_PATTERN_MAX 127
 #endif
 
+#ifndef LOG_PATTERN_DEFAULT
+#define LOG_PATTERN_DEFAULT "*** [%H:%M:%S %z] [%l] [thread %t] %v ***"
+#endif
+
 
 #define DEFINE_LOG_PATTERN  "*** [%H:%M:%S %z] [thread %t] %v ***"
 
@@ -75,7 +79,7 @@ extern LOGGER* create_console_log(const char* name);
 
 extern LOGGER* create_daily_log(const char *name, const char *path, const int hour, const int minute);
 
-extern ST_VOID destroy_logger(LOGGER **log);
+extern ST_VOID destroy_logger(ST_VOID_PTR *log);
 
 extern ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg);
 
