@@ -10,3 +10,6 @@ cmake-build-debug
 .idea
 examples/mqtt_client/mqtt_client
 examples/spdlog/spdlog
+*.so
+*.log
+*.cbp
