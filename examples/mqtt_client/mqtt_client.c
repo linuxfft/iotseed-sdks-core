@@ -77,8 +77,6 @@ static void signal_handler(int sig_num) {
     end = 1;
 }
 
-
-
 void *worker_thread_proc(void *param) {
     IOSSEED_MQTT_CONFIG *config = (IOSSEED_MQTT_CONFIG *) param;
 
@@ -87,7 +85,7 @@ void *worker_thread_proc(void *param) {
         if (iotseed_is_connected()){
             iotseed_mqtt_publish_msg(config->nc, "empoweriot/devices/123/rpc/requests", msg, 16, MG_MQTT_QOS(0));
         }
-        sleep(1);
+        iotseed_msSleep(500);
     }
     return NULL;
 }
@@ -135,7 +133,11 @@ int main(int argc, char **argv) {
     iotseed_mg_start_thread(worker_thread_proc, config);
 
 
+
     while (!end){
+        if (iotseed_is_connected()){
+            iotseed_mqtt_publish_msg(config->nc, "empoweriot/devices/123/rpc/requests", "demo data master process", 16, MG_MQTT_QOS(0));
+        }
         iotseed_msSleep(100);
     }
 

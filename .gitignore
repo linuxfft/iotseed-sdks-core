@@ -11,3 +11,6 @@ cmake-build-release
 .idea
 examples/mqtt_client/mqtt_client
 examples/spdlog/spdlog
+*.so
+*.log
+*.cbp
