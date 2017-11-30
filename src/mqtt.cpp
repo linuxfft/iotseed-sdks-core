@@ -3,10 +3,11 @@
 //
 
 #include "mqtt.h"
-#include "str_util.h"
+#include "str_utils.h"
 
 #include <atomic>
 #include <thread>
+
 
 struct mg_mgr* g_pMqttManager = nullptr;
 
@@ -45,8 +46,21 @@ static ST_RET destroy_global_manager(void) {
     return ret;
 }
 
+ST_VOID iotseed_mg_set_protocol_mqtt(void *nc){
+    struct mg_connection * _nc = (struct mg_connection *)nc;
+    mg_set_protocol_mqtt(_nc);
+}
 
-ST_RET destory_mqtt_config(MQTT_CONFIG** config){
+ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
+                                struct iotseed_mg_send_mqtt_handshake_opts* opts){
+    struct mg_connection * _nc = (struct mg_connection *)nc;
+    struct mg_send_mqtt_handshake_opts _opts = *(struct mg_send_mqtt_handshake_opts*)opts;
+
+    mg_send_mqtt_handshake_opt(_nc,client_id,_opts);
+}
+
+
+ST_RET destory_mqtt_config(IOSSEED_MQTT_CONFIG** config){
     auto lConfig = *config;
     if (nullptr == lConfig){
         return SD_SUCCESS;
@@ -59,7 +73,8 @@ ST_RET destory_mqtt_config(MQTT_CONFIG** config){
 }
 
 
-MQTT_CONFIG* init_mqtt_config(const char* s_address, const char* s_username, const char* s_password, const TOPIC *s_topics, const int topics_size){
+IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username, const char *s_password,
+                                              const TOPIC *s_topics, const int topics_size){
     if(nullptr == s_address || isAllWhitespace(s_address)){
         fprintf(stderr, "MQTT Broker地址为必填参数\n");
         exit(1);
@@ -69,7 +84,7 @@ MQTT_CONFIG* init_mqtt_config(const char* s_address, const char* s_username, con
         exit(1);
     }
 
-    auto config = new MQTT_CONFIG();
+    auto config = new IOSSEED_MQTT_CONFIG();
 
     strncpy(config->s_address, s_address, strlen(s_address) + 1);
 
@@ -95,7 +110,7 @@ MQTT_CONFIG* init_mqtt_config(const char* s_address, const char* s_username, con
 
 static void ev_handler(struct mg_connection *nc, int ev, void *p, void* user_data) {
     struct mg_mqtt_message *msg = (struct mg_mqtt_message *) p;
-    MQTT_CONFIG* config = (MQTT_CONFIG*)user_data;
+    IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
     (void) nc;
 
     if (ev != MG_EV_POLL) printf("USER HANDLER GOT EVENT %d\n", ev);
@@ -152,16 +167,16 @@ static void thread_task(){
 }
 
 
-ST_RET set_connected(void){
+ST_RET iotseed_set_connected(void){
     connected.exchange(true);
 }
 
-ST_RET is_connected(void){
+ST_RET iotseed_is_connected(void){
     return connected.load();
 }
 
 
-ST_RET create_mqtt_client(const MQTT_CONFIG* config){
+ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config){
     if(nullptr == config){
         return SD_FAILURE;
     }
@@ -175,9 +190,9 @@ ST_RET create_mqtt_client(const MQTT_CONFIG* config){
 }
 
 
-ST_RET mqtt_connect(MQTT_CONFIG* config, mg_event_handler_t handler)
+ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler)
 {
-    if ((config->nc = mg_connect(g_pMqttManager, config->s_address, handler, (void*)config)) == nullptr) {
+    if ((config->nc = (void *)mg_connect(g_pMqttManager, config->s_address, (mg_event_handler_t)handler, (void*)config)) == nullptr) {
         fprintf(stderr, "mg_connect(%s) failed\n", config->s_address);
         return SD_FAILURE;
     }
@@ -204,15 +219,20 @@ static ST_RET mqtt_wait_disconnect(void){
 }
 
 
+ST_VOID iotseed_mg_start_thread(void *(*f)(void *), void *p){
+    mg_start_thread(f,p);
+}
+
+
 /*!
  *
  * @param config mqtt 配置结构体指针
  * @return
  */
-ST_RET destory_mqtt_client(MQTT_CONFIG* config){
+ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
 
     if(nullptr != config->nc){
-        mg_mqtt_disconnect(config->nc); // 尝试发送断开连接的请求
+        mg_mqtt_disconnect((struct mg_connection*)(config->nc)); // 尝试发送断开连接的请求
     }
 
     mqtt_wait_disconnect();
@@ -231,17 +251,19 @@ ST_RET destory_mqtt_client(MQTT_CONFIG* config){
 
 
 //非线程安全
-ST_RET mqtt_publish_msg(struct mg_connection * nc,const char* topic, const char* msg, const int qos){
-    if(nullptr == nc)
+ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos){
+    struct mg_connection * _nc = (struct mg_connection *)nc;
+    if(nullptr == _nc)
         return SD_FAILURE;
-    mg_mqtt_publish(nc, topic, 65, MG_MQTT_QOS(qos), msg,
+    mg_mqtt_publish(_nc, topic, msg_id, MG_MQTT_QOS(qos), msg,
                     strlen(msg) + 1);
 
     return SD_SUCCESS;
 }
 
-ST_RET mqtt_subscribe_msg(struct mg_connection * nc,const char* topic,const int msg_id, const int qos){
-    struct mg_mqtt_topic_expression s_topic_expr = {topic, qos};
+ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos){
+    struct mg_connection * _nc = (struct mg_connection *)nc;
+    struct mg_mqtt_topic_expression s_topic_expr = {topic, (uint8_t)qos};
 
     if(nullptr == nc || nullptr == topic){
         fprintf(stderr,"mqtt订阅失败\n");
@@ -249,7 +271,7 @@ ST_RET mqtt_subscribe_msg(struct mg_connection * nc,const char* topic,const int 
     }
 
     printf("Subscribing to '%s'\n", topic);
-    mg_mqtt_subscribe(nc, &s_topic_expr, 1, (uint16_t)msg_id);
+    mg_mqtt_subscribe(_nc, &s_topic_expr, 1, (uint16_t)msg_id);
     return SD_SUCCESS;
 }
 

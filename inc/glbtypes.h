@@ -41,4 +41,8 @@
 #define ST_CHAR char
 #endif
 
+#ifndef ST_LONG
+#define ST_LONG long
+#endif
+
 #endif //IOTSEED_SDKS_CORE_GLBTYPES_H

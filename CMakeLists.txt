@@ -21,7 +21,9 @@ if (${OPENSSL_FOUND})
 endif ()
 
 
-set(SOURCE_FILES lib/mongoose/mongoose.c src/mqtt.cpp src/str_utils.cpp src/log.cpp src/operation_utils.cpp)
+set(SOURCE_FILES lib/mongoose/mongoose.c src/mqtt.cpp src/str_utils.cpp src/log.cpp src/operation_utils.cpp src/time_utils.cpp)
 add_library(iotseed_sdks_core SHARED ${SOURCE_FILES})
+#SET_TARGET_PROPERTIES(iotseed_sdks_core PROPERTIES OUTPUT_NAME "iotseed_sdks_core_static")
+#add_library(iotseed_sdks_core_static STATIC ${SOURCE_FILES})
 target_link_libraries (iotseed_sdks_core ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries (iotseed_sdks_core ${OPENSSL_LIBRARIES})

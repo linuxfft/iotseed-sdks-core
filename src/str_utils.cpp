@@ -2,7 +2,7 @@
 // Created by gubin on 17-11-20.
 //
 
-#include "str_util.h"
+#include "str_utils.h"
 
 
 ST_BOOLEAN isAllWhitespace (const char *astr)

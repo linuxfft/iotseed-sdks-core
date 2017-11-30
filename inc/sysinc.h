@@ -13,6 +13,10 @@
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4786 4800)
 #endif
+#include <winsock2.h>		/* must be before windows.h	*/
+#include <windows.h>
+#include <process.h>		/* for _beginthread, _endthread	*/
+#include <sys/timeb.h>		/* for ftime, timeb		*/
 #endif
 
 
@@ -21,11 +25,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdint.h>
 
 #if defined(linux)
 #include <sys/timeb.h>		/* for ftime, timeb		*/
 #include <dirent.h>		/* for POSIX directory functions*/
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <time.h>
 #endif
-
 
 #endif //IOTSEED_SDKS_CORE_SYSINC_H_H

@@ -8,7 +8,7 @@ ifeq ($(OS), Windows_NT)
 CFLAGS += -lws2_32
 CC = gcc
 else
-CFLAGS += -pthread -liotseed_sdks_core -DMG_ENABLE_CALLBACK_USERDATA -DMG_ENABLE_HTTP=0 -DMG_ENABLE_THREADS
+CFLAGS += -pthread -liotseed_sdks_core -DMG_ENABLE_CALLBACK_USERDATA -DMG_ENABLE_HTTP=0 -DMG_ENABLE_THREADS -DMG_ENABLE_SSL
 endif
 
 ifeq ($(SSL_LIB),openssl)

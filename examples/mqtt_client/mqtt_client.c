@@ -4,9 +4,10 @@
 
 #include "mqtt.h"
 
-#include "mongoose.h"
+#include "time_utils.h"
 
 #include <signal.h>
+
 
 static const char *s_address = "mqtt.hub.cloudahead.net:31883"; // mqtt broker by CloudAhead
 static const char *s_user_name = "cloudahead";
@@ -15,25 +16,25 @@ static char *s_device_id;
 
 static int end = 0;
 
-static void ev_handler(struct mg_connection *nc, int ev, void *p,void* user_data) {
-    struct mg_mqtt_message *msg = (struct mg_mqtt_message *) p;
-    MQTT_CONFIG* config = (MQTT_CONFIG*)user_data;
+static void ev_handler(void *nc, int ev, void *p,void* user_data) {
+    struct iotseed_mg_mqtt_message *msg = (struct iotseed_mg_mqtt_message *) p;
+    IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
     (void) nc;
 
-    if (ev != MG_EV_POLL) printf("USER HANDLER GOT EVENT %d\n", ev);
+    if (ev != IOTSEED_MG_EV_POLL) printf("USER HANDLER GOT EVENT %d\n", ev);
 
     switch (ev) {
-        case MG_EV_CONNECT: {
-            struct mg_send_mqtt_handshake_opts opts;
+        case IOTSEED_MG_EV_CONNECT: {
+            struct iotseed_mg_send_mqtt_handshake_opts opts;
             memset(&opts, 0, sizeof(opts));
             opts.user_name = config->s_username;
             opts.password = config->s_password;
 
-            mg_set_protocol_mqtt(nc);
-            mg_send_mqtt_handshake_opt(nc, "iotseed", opts);
+            iotseed_mg_set_protocol_mqtt(nc);
+            iotseed_mg_send_mqtt_handshake_opt(nc, "iotseed", &opts);
             break;
         }
-        case MG_EV_MQTT_CONNACK:
+        case IOTSEED_MG_EV_MQTT_CONNACK:
             if (msg->connack_ret_code != MG_EV_MQTT_CONNACK_ACCEPTED) {
                 printf("Got mqtt connection error: %d\n", msg->connack_ret_code);
                 exit(1);
@@ -41,14 +42,14 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p,void* user_data
             int qos = MG_MQTT_QOS(0);
 
             for(int i = 0; i < config->topics_size; ++i){
-                mqtt_subscribe_msg(config->nc,config->sub_topics[i],1000, qos);
+                iotseed_mqtt_subscribe_msg(config->nc,config->sub_topics[i],1000, qos);
             }
-            set_connected();
+            iotseed_set_connected();
             break;
-        case MG_EV_MQTT_PUBACK:
+        case IOTSEED_MG_EV_MQTT_PUBACK:
             printf("Message publishing acknowledged (msg_id: %d)\n", msg->message_id);
             break;
-        case MG_EV_MQTT_SUBACK:
+        case IOTSEED_MG_EV_MQTT_SUBACK:
             printf("Subscription acknowledged, forwarding to '/test'\n");
             break;
         case MG_EV_MQTT_PUBLISH: {
@@ -65,7 +66,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p,void* user_data
 //                            msg->payload.len);
             break;
         }
-        case MG_EV_CLOSE:
+        case IOTSEED_MG_EV_CLOSE:
             printf("Connection closed\n");
             exit(1);
     }
@@ -79,15 +80,12 @@ static void signal_handler(int sig_num) {
 
 
 void *worker_thread_proc(void *param) {
-    MQTT_CONFIG *config = (MQTT_CONFIG *) param;
-    struct mg_connection *nc = config->nc;
-
+    IOSSEED_MQTT_CONFIG *config = (IOSSEED_MQTT_CONFIG *) param;
 
     while (!end) {
         char* msg = "demo data";
-        if (is_connected()){
-            mg_mqtt_publish(nc, "empoweriot/devices/123/rpc/requests", 65, MG_MQTT_QOS(0), msg,
-                            strlen(msg) + 1);
+        if (iotseed_is_connected()){
+            iotseed_mqtt_publish_msg(config->nc, "empoweriot/devices/123/rpc/requests", msg, 16, MG_MQTT_QOS(0));
         }
         sleep(1);
     }
@@ -114,33 +112,33 @@ int main(int argc, char **argv) {
     }
 
 
-    MQTT_CONFIG* config = init_mqtt_config(s_address, s_user_name, s_password,sub_topics,2);
+    IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_user_name, s_password,sub_topics,2);
     if (NULL == config){
         fprintf(stderr, "初始化mqtt配置失败\n");
         exit(1);
     }
 
-    ret = create_mqtt_client(config);
+    ret = iotseed_create_mqtt_client(config);
 
     if(ret != SD_SUCCESS){
         fprintf(stderr, "创建mqtt客户端失败\n");
         exit(1);
     }
 
-    ret = mqtt_connect(config, ev_handler);
+    ret = iotseed_mqtt_connect(config, ev_handler);
 
     if(ret != SD_SUCCESS){
         fprintf(stderr, "连接mqtt broker失败\n");
         exit(1);
     }
 
-    mg_start_thread(worker_thread_proc, config);
+    iotseed_mg_start_thread(worker_thread_proc, config);
 
 
     while (!end){
-        sleep(1);
+        iotseed_msSleep(100);
     }
 
-    destory_mqtt_client(config);
+    iotseed_destory_mqtt_client(config);
 
 }
