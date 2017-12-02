@@ -18,6 +18,38 @@
 
 #include "operation_utils.h"
 
+#include "json/json.hpp"
+
+// for convenience
+using nlohmann::json;
+
+using std::string;
+
+namespace iotseed_log {
+    class _iotseed_log_msg{
+        public:
+            string IOTSeedLogLevel;
+            string IOTSeedClientID;
+            string IOTSeedLogType;
+            string IOTSeedMessage;
+        public:
+            _iotseed_log_msg(string clientID, string type, string msg){
+                this->IOTSeedClientID = clientID;
+                this->IOTSeedLogType = type;
+                this->IOTSeedMessage = msg;
+            }
+
+    };
+
+    void to_json(json& j, const _iotseed_log_msg& p) {
+        j = json{{"IOTSeedLogLevel", p.IOTSeedLogLevel},
+                 {"IOTSeedClientID", p.IOTSeedClientID},
+                 {"IOTSeedLogType", p.IOTSeedLogType},
+                 {"IOTSeedMessage", p.IOTSeedMessage},
+        };
+    }
+}
+
 
 namespace spd = spdlog;
 
@@ -31,10 +63,10 @@ static inline ST_BOOLEAN iConfigIsNull(const LOG_CONFIG* config ){
 
 static spd::level::level_enum iotseed_loglevel_to_spd(const LOG_LEVEL level){
     switch (level){
-        case Trace:
-            return spd::level::trace;
-        case Debug:
-            return spd::level::debug;
+//        case Trace:
+//            return spd::level::trace;
+//        case Debug:
+//            return spd::level::debug;
         case Info:
             return spd::level::info;
         case Warn:
@@ -50,14 +82,15 @@ static spd::level::level_enum iotseed_loglevel_to_spd(const LOG_LEVEL level){
     }
 }
 
-static LOG_CONFIG* create_log_config(const char* name){
+static LOG_CONFIG* create_log_config(const char *name, const char *clientID){
 
     if(nullptr == name || strlen(name) > LOG_NAME_MAX){
         fprintf(stderr, "日志名称长度大于最大长度:%d\n", LOG_NAME_MAX);
         return nullptr;
     }
     auto pCnf = new LOG_CONFIG();
-    strcpy(pCnf->pattern,"*** [%H:%M:%S %z] [thread %t] %v ***");
+    strcpy(pCnf->pattern,LOG_PATTERN_DEFAULT);
+    strcpy(pCnf->clientID, clientID);
     pCnf->queue_size = 4096;
     pCnf->log_level = Info;
     pCnf->aync_mode = SD_FALSE;
@@ -133,9 +166,9 @@ ST_RET create_spd_logger(LOGGER* pLogger, const char* name, const char *path, co
  * @param file_num 日志文件最多生成几份
  * @return
  */
-LOGGER* create_rotated_log(const char *name, const char *path, const size_t file_size_bit, const size_t file_num) {
+LOGGER* create_rotated_log(const char *name, const char *clientID, const char *path, const size_t file_size_bit, const size_t file_num) {
     LOGGER* pLogger = new LOGGER();
-    if((pLogger->config = create_log_config(name)) == nullptr){
+    if((pLogger->config = create_log_config(name, clientID)) == nullptr){
         fprintf(stderr, "日志配置创建失败\n");
         return nullptr;
     };
@@ -149,9 +182,9 @@ LOGGER* create_rotated_log(const char *name, const char *path, const size_t file
  * 创建终端日志
  * @return
  */
-LOGGER* create_console_log(const char* name) {
+LOGGER* create_console_log(const char* name, const char *clientID) {
     LOGGER* pLogger = new LOGGER();
-    if((pLogger->config = create_log_config(name)) == nullptr){
+    if((pLogger->config = create_log_config(name, clientID)) == nullptr){
         fprintf(stderr, "日志配置创建失败\n");
         return nullptr;
     };
@@ -168,9 +201,9 @@ LOGGER* create_console_log(const char* name) {
  * @param minute 日志文件在每天几分生成
  * @return
  */
-LOGGER* create_daily_log(const char *name, const char *path, const int hour, const int minute) {
+LOGGER* create_daily_log(const char *name, const char *clientID, const char *path, const int hour, const int minute) {
     LOGGER* pLogger = (LOGGER*) calloc(1, sizeof(LOGGER));
-    if((pLogger->config = create_log_config(name)) == nullptr){
+    if((pLogger->config = create_log_config(name, clientID)) == nullptr){
         fprintf(stderr, "日志配置创建失败\n");
         return nullptr;
     };
@@ -275,29 +308,65 @@ ST_RET set_log_msg_format(LOGGER* pLogger, const char* format){
 }
 
 
-ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg){
+ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg, LOG_INFO_TYPE type){
     auto local_log = spd::get(logger->config->name);
     if (nullptr == msg || nullptr == local_log){
         return;
     }
-    switch (level){
-        case Info:
-            (local_log)->info(msg);
+    string _type;
+    switch (type){
+        case Log:
+            _type = "log";
             break;
-        case Warn:
-            (local_log)->warn(msg);
-            break;
-        case Critical:
-            (local_log)->critical(msg);
-            break;
-        case Err:
-            (local_log)->error(msg);
-            break;
-        case Trace:
-            (local_log)->trace(msg);
+        case Recipe:
+            _type = "recipe";
             break;
         default:
-            (local_log)->info(msg);
+            fprintf(stderr,"日志类型未定义\n");
+            return;
+    }
+    auto message = iotseed_log::_iotseed_log_msg(logger->config->clientID, _type, msg);
+    json j;
+    switch (level){
+        case Info:
+            message.IOTSeedLogLevel = "INFO";
+            j = message;
+            (local_log)->info(j.dump());
+            break;
+        case Warn:
+            message.IOTSeedLogLevel = "WARNING";
+            j = message;
+            (local_log)->warn(j.dump());
+            break;
+        case Critical:
+            message.IOTSeedLogLevel = "CRITICAL";
+            j = message;
+            (local_log)->critical(j.dump());
+            break;
+        case Err:
+            message.IOTSeedLogLevel = "ERROR";
+            j = message;
+            (local_log)->error(j.dump());
+            break;
+//        case Trace:
+//            message.IOTSeedLogLevel = "TRACE";
+//            j = message;
+//            (local_log)->trace(j.dump());
+//            break;
+//        case Debug:
+//            message.IOTSeedLogLevel = "DEBUG";
+//            j = message;
+//            (local_log)->debug(j.dump());
+//            break;
+        case Off:
+            message.IOTSeedLogLevel = "OFF";
+            j = message;
+            (local_log)->error(j.dump());
+            break;
+        default:
+            message.IOTSeedLogLevel = "INFO";
+            j = message;
+            (local_log)->info(j.dump());
             break;
     }
 

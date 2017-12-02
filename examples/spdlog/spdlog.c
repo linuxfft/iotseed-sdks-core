@@ -10,6 +10,8 @@
 
 static int end = 0;
 
+const char *CLIENT_ID = "23f901e0-ccc3-11e7-bf1a-59e9355b22c6";
+
 
 static void signal_handler(int sig_num) {
     signal(sig_num, signal_handler);  // Reinstantiate signal handler
@@ -21,20 +23,20 @@ int main(){
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    void *log = create_console_log("111");
+    void *log = create_console_log("111",CLIENT_ID);
 
-//    void *log2 = create_daily_log("222","./test.log",0,0);
-//
-//    void *log3 = create_rotated_log("333","./testrotate.log",MAXLOG_FILE_SIZE, MAXLOG_FILE_NUM);
+    void *log2 = create_daily_log("222", CLIENT_ID,"./test.log",0,0);
+
+    void *log3 = create_rotated_log("333",CLIENT_ID,"./testrotate.log",MAXLOG_FILE_SIZE, MAXLOG_FILE_NUM);
 
     while(!end){
-        write_log(log, Critical, "1111");
-//        write_log(log2, 3, "2222");
-//        write_log(log3, 3, "333");
+        write_log(log, Critical, "1111", Log);
+        write_log(log2,Info, "2222", Recipe);
+        write_log(log3,Off, "333", Log);
         sleep(1);
     }
 
     destroy_logger(&log);
-//    destroy_logger(&log2);
-//    destroy_logger(&log3);
+    destroy_logger(&log2);
+    destroy_logger(&log3);
 }

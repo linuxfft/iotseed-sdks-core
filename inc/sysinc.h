@@ -37,4 +37,8 @@
 #include <time.h>
 #endif
 
+#ifndef IOTSEED_CLIENT_ID_MAX
+#define IOTSEED_CLIENT_ID_MAX   63
+#endif
+
 #endif //IOTSEED_SDKS_CORE_SYSINC_H_H
