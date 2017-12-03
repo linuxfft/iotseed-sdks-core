@@ -25,6 +25,14 @@ using nlohmann::json;
 
 using std::string;
 
+static void parse_time_offset(char* dst){
+    int _offset = atoi(dst);
+    int _hour = _offset / 100;
+    int _minutes = _offset % 100;
+    sprintf(dst, "%02d:%02d",_hour,_minutes);
+}
+
+
 namespace iotseed_log {
     class _iotseed_log_msg{
         public:
@@ -32,11 +40,19 @@ namespace iotseed_log {
             string IOTSeedClientID;
             string IOTSeedLogType;
             string IOTSeedMessage;
+            string IOTSeedTS; //时间戳
         public:
             _iotseed_log_msg(string clientID, string type, string msg){
                 this->IOTSeedClientID = clientID;
                 this->IOTSeedLogType = type;
                 this->IOTSeedMessage = msg;
+                auto now = time(nullptr);
+                auto tm_time = spdlog::details::os::localtime(now);
+                char date_buf[100];
+                std::strftime(date_buf, sizeof(date_buf), "%Y-%m-%dT%H:%M:%S%z", &tm_time);
+                size_t _offset = strlen(date_buf) - 4;
+                parse_time_offset(date_buf + _offset);
+                this->IOTSeedTS = date_buf;
             }
 
     };
@@ -46,6 +62,7 @@ namespace iotseed_log {
                  {"IOTSeedClientID", p.IOTSeedClientID},
                  {"IOTSeedLogType", p.IOTSeedLogType},
                  {"IOTSeedMessage", p.IOTSeedMessage},
+                 {"IOTSeedTS", p.IOTSeedTS}
         };
     }
 }
