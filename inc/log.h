@@ -59,7 +59,7 @@ typedef enum _enum_log_level_t {
     Warn = 3,
     Err = 4,
     Critical = 5,
-    Off = 6
+//    Off = 6
 }LOG_LEVEL;
 
 typedef enum _enum_log_info_type_t {

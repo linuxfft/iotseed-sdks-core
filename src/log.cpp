@@ -92,8 +92,8 @@ static spd::level::level_enum iotseed_loglevel_to_spd(const LOG_LEVEL level){
             return spd::level::err;
         case Critical:
             return spd::level::critical;
-        case Off:
-            return spd::level::off;
+//        case Off:
+//            return spd::level::off;
         default:
             return spd::level::info;
     }
@@ -375,11 +375,11 @@ ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg, LOG_IN
 //            j = message;
 //            (local_log)->debug(j.dump());
 //            break;
-        case Off:
-            message.IOTSeedLogLevel = "OFF";
-            j = message;
-            (local_log)->error(j.dump());
-            break;
+//        case Off:
+//            message.IOTSeedLogLevel = "OFF";
+//            j = message;
+//            (local_log)->error(j.dump());
+//            break;
         default:
             message.IOTSeedLogLevel = "INFO";
             j = message;
