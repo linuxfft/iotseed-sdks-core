@@ -5,44 +5,89 @@
 #ifndef IOTSEED_SDKS_CORE_GLBTYPES_H
 #define IOTSEED_SDKS_CORE_GLBTYPES_H
 
-#ifndef SD_TRUE
-#define SD_TRUE 1
-#endif
-
-#ifndef SD_FALSE
-#define SD_FALSE 0
-#endif
-
-#ifndef SD_SUCCESS
+#define SD_TRUE		1
+#define SD_FALSE	0
 #define SD_SUCCESS 	0
-#endif
-
-#ifndef SD_FAILURE
 #define SD_FAILURE 	1
-#endif
+#define SD_BIG_ENDIAN		0 //大端
+#define SD_LITTLE_ENDIAN	1 //小端
 
-#ifndef ST_RET
+
+
+#if defined(_WIN32)
+
+#define SD_BYTE_ORDER	SD_LITTLE_ENDIAN
+
+#define ST_CHAR    char
+#define ST_INT     signed int
+#define ST_LONG    signed long int
+#define ST_UCHAR   unsigned char
+#define ST_UINT    unsigned int
+#define ST_ULONG   unsigned long
+#define ST_VOID    void
+#define ST_VOID_PTR ST_VOID*
+#define ST_DOUBLE  double
+#define ST_FLOAT   float
+
 #define ST_RET signed int
-#endif
 
-#ifndef ST_BOOLEAN
+#define ST_INT8     signed char
+#define ST_INT16    signed short
+#define ST_INT32    signed long
+#define ST_INT64    __int64
+#define ST_UINT8    unsigned char
+#define ST_UINT16   unsigned short
+#define ST_UINT32   unsigned long
+#define ST_UINT64   unsigned __int64
 #define ST_BOOLEAN  unsigned char
+
+#define INT64_SUPPORT
+
+
+#endif /* windows	*/
+
+
+#if defined(linux) || defined(__LYNX)
+#include <endian.h>
+#if (__BYTE_ORDER ==__LITTLE_ENDIAN)
+#define SD_BYTE_ORDER	SD_LITTLE_ENDIAN
+#elif (__BYTE_ORDER ==__BIG_ENDIAN)
+#define SD_BYTE_ORDER	SD_BIG_ENDIAN
+#else
+  #error unsupported byte order
 #endif
 
-#ifndef ST_VOID
-#define ST_VOID void
-#endif
+#define SD_END_STRUCT
 
-#ifndef ST_VOID_PTR
-#define ST_VOID_PTR void*
-#endif
+#define ST_CHAR    char
+#define ST_INT     signed int
+#define ST_LONG    signed long int
+#define ST_UCHAR   unsigned char
+#define ST_UINT    unsigned int
+#define ST_ULONG   unsigned long
+#define ST_VOID    void
+#define ST_VOID_PTR ST_VOID*
+#define ST_DOUBLE  double
+#define ST_FLOAT   float
 
-#ifndef ST_CHAR
-#define ST_CHAR char
-#endif
+#define ST_RET signed int
 
-#ifndef ST_LONG
-#define ST_LONG long
-#endif
+#define ST_INT8   signed char
+#define ST_INT16  signed short
+#define ST_INT32  signed int			/* was signed long	*/
+#define ST_INT64  signed long long
+#define ST_UINT8  unsigned char
+#define ST_UINT16 unsigned short
+#define ST_UINT32 unsigned int			/* was unsigned long	*/
+#define ST_UINT64 unsigned long long
+#define ST_BOOLEAN  unsigned char
+
+
+/* This define shows that we really have support for 64 bit integers	*/
+#define INT64_SUPPORT
+
+
+#endif	/* linux	*/
+
 
 #endif //IOTSEED_SDKS_CORE_GLBTYPES_H

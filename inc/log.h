@@ -84,17 +84,17 @@ typedef struct _struct_logger_t {
     LOG_CONFIG      *config;
 }LOGGER;
 
-extern LOGGER* create_rotated_log(const char *name, const char *clientID, const char *path, const size_t file_size_bit, const size_t file_num);
+LOGGER* create_rotated_log(const char *name, const char *clientID, const char *path, const size_t file_size_bit, const size_t file_num);
 
-extern LOGGER* create_console_log(const char* name, const char *clientID);
+LOGGER* create_console_log(const char* name, const char *clientID);
 
-extern LOGGER* create_daily_log(const char *name, const char *clientID, const char *path, const int hour, const int minute);
+LOGGER* create_daily_log(const char *name, const char *clientID, const char *path, const int hour, const int minute);
 
-extern ST_VOID destroy_logger(ST_VOID_PTR *log);
+ST_VOID destroy_logger(LOGGER **log);
 
-extern ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg, LOG_INFO_TYPE type);
+ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg, LOG_INFO_TYPE type);
 
-extern ST_RET set_log_msg_format(LOGGER* pLogger, const char* format);
+ST_RET set_log_msg_format(LOGGER* pLogger, const char* format);
 
 
 

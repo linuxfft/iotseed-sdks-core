@@ -169,6 +169,7 @@ static void thread_task(){
 
 ST_RET iotseed_set_connected(void){
     connected.exchange(true);
+    return SD_SUCCESS;
 }
 
 ST_RET iotseed_is_connected(void){
@@ -243,10 +244,12 @@ ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
 
     ST_RET ret = destroy_global_manager();
     if (ret != SD_SUCCESS) {
-        printf("清除全局消息管理者失败\n");
+#ifdef IOTSEED_DEBUG
+        fprintf(stderr,"清除全局消息管理者失败\n");
+#endif
         return ret;
     }
-
+    return SD_SUCCESS;
 }
 
 

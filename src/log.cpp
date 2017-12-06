@@ -230,10 +230,9 @@ LOGGER* create_daily_log(const char *name, const char *clientID, const char *pat
 }
 
 
-ST_VOID destroy_logger(ST_VOID_PTR *log){
-    LOGGER **local_log = (LOGGER **)log;
-    destroy_log_config(&((*local_log)->config));
-    delete(*local_log);
+ST_VOID destroy_logger(LOGGER **log){
+    destroy_log_config(&((*log)->config));
+    delete(*log);
     *log = nullptr;
 }
 

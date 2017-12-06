@@ -104,21 +104,21 @@ struct iotseed_mg_mqtt_message {
 };
 
 
-extern IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username,
+IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username,
                                                      const char *s_password, const TOPIC *s_topics,
                                                      const int topics_size);
 
 
 // client
-extern ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config);
+ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config);
 
-extern ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config);
+ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config);
 
 
 //连接相关
-extern ST_RET iotseed_set_connected(void);
+ST_RET iotseed_set_connected(void);
 
-extern ST_RET iotseed_is_connected(void);
+ST_RET iotseed_is_connected(void);
 
 /*!
  *
@@ -127,24 +127,24 @@ extern ST_RET iotseed_is_connected(void);
  * @return SD_SUCCESS: 成功
  *         SD_FAILURE: 失败
  */
-extern ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler);
+ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler);
 
-extern ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
+ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
 
-extern ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
+ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
                                                   struct iotseed_mg_send_mqtt_handshake_opts* opts);
 
 
 
 //线程
-extern ST_VOID iotseed_mg_start_thread(void *(*f)(void *), void *p);
+ST_VOID iotseed_mg_start_thread(void *(*f)(void *), void *p);
 
 
 
 //发布订阅
-extern ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos);
+ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos);
 
-extern ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos);
+ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos);
 
 
 #ifdef __cplusplus

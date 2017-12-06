@@ -5,7 +5,7 @@
 #ifndef IOTSEED_SDKS_CORE_SYSINC_H_H
 #define IOTSEED_SDKS_CORE_SYSINC_H_H
 
-#if defined (_WIN32) || defined(_WIN64)
+#if defined (_WIN32)
 #if !defined (_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
@@ -27,7 +27,7 @@
 #include <ctype.h>
 #include <stdint.h>
 
-#if defined(linux)
+#if defined(linux) || defined(__LYNX)
 #include <sys/timeb.h>		/* for ftime, timeb		*/
 #include <dirent.h>		/* for POSIX directory functions*/
 #include <sys/ioctl.h>

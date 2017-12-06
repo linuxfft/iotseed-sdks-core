@@ -14,7 +14,7 @@ extern "C" {
 
 #include "glbtypes.h"
 
-extern ST_VOID iotseed_msSleep(ST_LONG ms);
+ST_VOID iotseed_msSleep(ST_LONG ms);
 
 #ifdef __cplusplus
 }

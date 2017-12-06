@@ -12,6 +12,9 @@
 static const char *s_address = "mqtt.hub.cloudahead.net:31883"; // mqtt broker by CloudAhead
 static const char *s_user_name = "cloudahead";
 static const char *s_password = "alano+1234567";
+
+const char *CLIENT_ID = "23f901e0-ccc3-11e7-bf1a-59e9355b22c6";
+
 static char *s_device_id;
 
 static int end = 0;
@@ -97,7 +100,7 @@ int main(int argc, char **argv) {
 //    int msg_id = rand();
 
 //    char s_topic[256] = {0};
-    TOPIC sub_topics[2] = {"empoweriot/devices/123/rpc/requests","empoweriot/devices/+/telemetry"};
+    TOPIC sub_topics[2] = {"empoweriot/devices/123/rpc/request/+","empoweriot/devices/+/telemetry"};
 
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
@@ -110,7 +113,7 @@ int main(int argc, char **argv) {
     }
 
 
-    IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_user_name, s_password,sub_topics,2);
+    IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_user_name, s_password,sub_topics,sizeof(sub_topics)/ sizeof(TOPIC));
     if (NULL == config){
         fprintf(stderr, "初始化mqtt配置失败\n");
         exit(1);
@@ -135,6 +138,7 @@ int main(int argc, char **argv) {
 
 
     while (!end){
+        //critical 必须先连接后才可以进行发布
         if (iotseed_is_connected()){
             iotseed_mqtt_publish_msg(config->nc, "empoweriot/devices/123/rpc/requests", "demo data master process", 16, MG_MQTT_QOS(0));
         }

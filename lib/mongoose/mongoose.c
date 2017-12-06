@@ -57,7 +57,7 @@ MG_INTERNAL struct mg_connection *mg_create_connection(
     struct mg_mgr *mgr, mg_event_handler_t callback,
     struct mg_add_sock_opts opts);
 #ifdef _WIN32
-/* Retur value is the same as for MultiByteToWideChar. */
+/* Retur _value is the same as for MultiByteToWideChar. */
 int to_wchar(const char *path, wchar_t *wbuf, size_t wbuf_len);
 #endif
 
@@ -1363,7 +1363,7 @@ void mbuf_resize(struct mbuf *a, size_t new_size) {
     char *buf = (char *) MBUF_REALLOC(a->buf, new_size);
     /*
      * In case realloc fails, there's not much we can do, except keep things as
-     * they are. Note that NULL is a valid return value from realloc when
+     * they are. Note that NULL is a valid return _value from realloc when
      * size == 0, but that is covered too.
      */
     if (buf == NULL && new_size != 0) return;
@@ -1983,7 +1983,7 @@ struct mg_str mg_next_comma_list_entry_n(struct mg_str list, struct mg_str *val,
       list.len -= (chr - list.p);
       list.p = chr;
     } else {
-      /* This value is the last one */
+      /* This _value is the last one */
       list = mg_mk_str_n(list.p + list.len, 0);
     }
 
@@ -5852,11 +5852,11 @@ static const char *mg_http_parse_headers(const char *s, const char *end,
     s = mg_skip(s, end, "\r\n", v);
 
     while (v->len > 0 && v->p[v->len - 1] == ' ') {
-      v->len--; /* Trim trailing spaces in header value */
+      v->len--; /* Trim trailing spaces in header _value */
     }
 
     /*
-     * If header value is empty - skip it and go to next (if any).
+     * If header _value is empty - skip it and go to next (if any).
      * NOTE: Do not add it to headers_values because such addition changes API
      * behaviour
      */
@@ -6999,7 +6999,7 @@ int mg_get_http_var(const struct mg_str *buf, const char *name, char *dst,
 
   /*
    * According to the documentation function returns negative
-   * value in case of error. For debug purposes it returns:
+   * _value in case of error. For debug purposes it returns:
    * -1 - src is wrong (NUUL)
    * -2 - dst is wrong (NULL)
    * -3 - failed to decode url or dst is to small
@@ -7867,7 +7867,7 @@ static int mg_num_leap_years(int year) {
   return year / 4 - year / 100 + year / 400;
 }
 
-/* Parse UTC date-time string, and return the corresponding time_t value. */
+/* Parse UTC date-time string, and return the corresponding time_t _value. */
 MG_INTERNAL time_t mg_parse_date_string(const char *datetime) {
   static const unsigned short days_before_month[] = {
       0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
@@ -9042,7 +9042,7 @@ static void do_ssi_exec(struct mg_connection *nc, char *tag) {
 
 /*
  * SSI directive has the following format:
- * <!--#directive parameter=value parameter=value -->
+ * <!--#directive parameter=_value parameter=_value -->
  */
 static void mg_send_ssi_file(struct mg_connection *nc, struct http_message *hm,
                              const char *path, FILE *fp, int include_level,
@@ -11345,7 +11345,7 @@ static int mg_get_ip_address_of_nameserver(char *name, size_t name_len) {
   int i;
   LONG err;
   HKEY hKey, hSub;
-  wchar_t subkey[512], value[128],
+  wchar_t subkey[512], _value[128],
       *key = L"SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces";
 
   if ((err = RegOpenKeyExW(HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &hKey)) !=
@@ -11354,31 +11354,31 @@ static int mg_get_ip_address_of_nameserver(char *name, size_t name_len) {
     ret = -1;
   } else {
     for (ret = -1, i = 0; 1; i++) {
-      DWORD subkey_size = sizeof(subkey), type, len = sizeof(value);
+      DWORD subkey_size = sizeof(subkey), type, len = sizeof(_value);
       if (RegEnumKeyExW(hKey, i, subkey, &subkey_size, NULL, NULL, NULL,
                         NULL) != ERROR_SUCCESS) {
         break;
       }
       if (RegOpenKeyExW(hKey, subkey, 0, KEY_READ, &hSub) == ERROR_SUCCESS &&
-          ((RegQueryValueExW(hSub, L"NameServer", 0, &type, (void *) value,
+          ((RegQueryValueExW(hSub, L"NameServer", 0, &type, (void *) _value,
                              &len) == ERROR_SUCCESS &&
-            value[0] != '\0') ||
-           (RegQueryValueExW(hSub, L"DhcpNameServer", 0, &type, (void *) value,
+            _value[0] != '\0') ||
+           (RegQueryValueExW(hSub, L"DhcpNameServer", 0, &type, (void *) _value,
                              &len) == ERROR_SUCCESS &&
-            value[0] != '\0'))) {
+            _value[0] != '\0'))) {
         /*
          * See https://github.com/cesanta/mongoose/issues/176
-         * The value taken from the registry can be empty, a single
+         * The _value taken from the registry can be empty, a single
          * IP address, or multiple IP addresses separated by comma.
          * If it's empty, check the next interface.
          * If it's multiple IP addresses, take the first one.
          */
-        wchar_t *comma = wcschr(value, ',');
+        wchar_t *comma = wcschr(_value, ',');
         if (comma != NULL) {
           *comma = '\0';
         }
         /* %S will convert wchar_t -> char */
-        snprintf(name, name_len, "%S", value);
+        snprintf(name, name_len, "%S", _value);
         ret = 0;
         RegCloseKey(hSub);
         break;
@@ -11629,14 +11629,14 @@ void mg_coap_free_options(struct mg_coap_message *cm) {
 }
 
 struct mg_coap_option *mg_coap_add_option(struct mg_coap_message *cm,
-                                          uint32_t number, char *value,
+                                          uint32_t number, char *_value,
                                           size_t len) {
   struct mg_coap_option *new_option =
       (struct mg_coap_option *) MG_CALLOC(1, sizeof(*new_option));
 
   new_option->number = number;
-  new_option->value.p = value;
-  new_option->value.len = len;
+  new_option->_value.p = _value;
+  new_option->_value.len = len;
 
   if (cm->options == NULL) {
     cm->options = cm->optiomg_tail = new_option;
@@ -11833,7 +11833,7 @@ static char *coap_get_options(char *ptr, struct mbuf *io,
 
     if (option_delta == 15 || option_lenght == 15) {
       /*
-       * 15:  Reserved for future use.  If the field is set to this value,
+       * 15:  Reserved for future use.  If the field is set to this _value,
        * it MUST be processed as a message format error
        */
       cm->flags |= MG_COAP_FORMAT_ERROR;
@@ -11928,12 +11928,12 @@ uint32_t mg_coap_parse(struct mbuf *io, struct mg_coap_message *cm) {
  *
  * Helper function.
  */
-static size_t coap_get_ext_opt_size(uint32_t value) {
+static size_t coap_get_ext_opt_size(uint32_t _value) {
   int ret = 0;
 
-  if (value >= 13 && value <= 0xFF + 13) {
+  if (_value >= 13 && _value <= 0xFF + 13) {
     ret = sizeof(uint8_t);
-  } else if (value > 0xFF + 13 && value <= 0xFFFF + 269) {
+  } else if (_value > 0xFF + 13 && _value <= 0xFFFF + 269) {
     ret = sizeof(uint16_t);
   }
 
@@ -11945,18 +11945,18 @@ static size_t coap_get_ext_opt_size(uint32_t value) {
  *
  * Helper function.
  */
-static int coap_split_opt(uint32_t value, uint8_t *base, uint16_t *ext) {
+static int coap_split_opt(uint32_t _value, uint8_t *base, uint16_t *ext) {
   int ret = 0;
 
-  if (value < 13) {
-    *base = value;
-  } else if (value >= 13 && value <= 0xFF + 13) {
+  if (_value < 13) {
+    *base = _value;
+  } else if (_value >= 13 && _value <= 0xFF + 13) {
     *base = 13;
-    *ext = value - 13;
+    *ext = _value - 13;
     ret = sizeof(uint8_t);
-  } else if (value > 0xFF + 13 && value <= 0xFFFF + 269) {
+  } else if (_value > 0xFF + 13 && _value <= 0xFFFF + 269) {
     *base = 14;
-    *ext = value - 269;
+    *ext = _value - 269;
     ret = sizeof(uint16_t);
   }
 
@@ -11977,7 +11977,7 @@ static char *coap_add_uint16(char *ptr, uint16_t val) {
 }
 
 /*
- * Puts extended value of Opt Number/Length into given char stream.
+ * Puts extended _value of Opt Number/Length into given char stream.
  *
  * Helper function.
  */
@@ -12026,7 +12026,7 @@ static uint32_t coap_calculate_packet_size(struct mg_coap_message *cm,
   while (opt != NULL) {
     *len += 1; /* basic delta/length */
     *len += coap_get_ext_opt_size(opt->number - prev_opt_number);
-    *len += coap_get_ext_opt_size((uint32_t) opt->value.len);
+    *len += coap_get_ext_opt_size((uint32_t) opt->_value.len);
     /*
      * Current implementation performs check if
      * option_number > previous option_number and produces an error
@@ -12034,11 +12034,11 @@ static uint32_t coap_calculate_packet_size(struct mg_coap_message *cm,
      * May be resorting is more suitable solution.
      */
     if ((opt->next != NULL && opt->number > opt->next->number) ||
-        opt->value.len > 0xFFFF + 269 ||
+        opt->_value.len > 0xFFFF + 269 ||
         opt->number - prev_opt_number > 0xFFFF + 269) {
       return MG_COAP_ERROR | MG_COAP_OPTIOMG_FIELD;
     }
-    *len += opt->value.len;
+    *len += opt->_value.len;
     prev_opt_number = opt->number;
     opt = opt->next;
   }
@@ -12091,7 +12091,7 @@ uint32_t mg_coap_compose(struct mg_coap_message *cm, struct mbuf *io) {
     size_t opt_delta_len =
         coap_split_opt(opt->number - prev_opt_number, &delta_base, &delta_ext);
     size_t opt_lenght_len =
-        coap_split_opt((uint32_t) opt->value.len, &length_base, &length_ext);
+        coap_split_opt((uint32_t) opt->_value.len, &length_base, &length_ext);
 
     *ptr = (delta_base << 4) | length_base;
     ptr++;
@@ -12099,9 +12099,9 @@ uint32_t mg_coap_compose(struct mg_coap_message *cm, struct mbuf *io) {
     ptr = coap_add_opt_info(ptr, delta_ext, opt_delta_len);
     ptr = coap_add_opt_info(ptr, length_ext, opt_lenght_len);
 
-    if (opt->value.len != 0) {
-      memcpy(ptr, opt->value.p, opt->value.len);
-      ptr += opt->value.len;
+    if (opt->_value.len != 0) {
+      memcpy(ptr, opt->_value.p, opt->_value.len);
+      ptr += opt->_value.len;
     }
 
     prev_opt_number = opt->number;
@@ -15774,7 +15774,7 @@ void mg_lwip_ssl_send(struct mg_connection *nc) {
     return;
   }
   struct mg_lwip_conn_state *cs = (struct mg_lwip_conn_state *) nc->sock;
-  /* It's ok if the buffer is empty. Return value of 0 may also be valid. */
+  /* It's ok if the buffer is empty. Return _value of 0 may also be valid. */
   int len = cs->last_ssl_write_size;
   if (len == 0) {
     len = MIN(MG_LWIP_SSL_IO_SIZE, nc->send_mbuf.len);
