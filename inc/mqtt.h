@@ -57,6 +57,9 @@ typedef char TOPIC[TOPIC_MAX_LEN +1];
 typedef void (*iotseed_mg_event_handler_t)(void *nc, int ev,
                                    void *ev_data, void *user_data) ;
 
+
+typedef  void* IOTSEED_THREAD_ID;
+
 typedef struct _mqtt_config_struct_t {
     char    s_address[ADDRESS_MAX_LEN + 1];
     char    s_username[USENAME_MAX_LEN + 1];
@@ -137,9 +140,7 @@ ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
 
 
 //线程
-ST_VOID iotseed_mg_start_thread(void *(*f)(void *), void *p);
-
-
+IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *p);
 
 //发布订阅
 ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos);

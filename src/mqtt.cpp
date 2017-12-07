@@ -220,9 +220,10 @@ static ST_RET mqtt_wait_disconnect(void){
 }
 
 
-ST_VOID iotseed_mg_start_thread(void *(*f)(void *), void *p){
-    mg_start_thread(f,p);
+IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *p){
+    return mg_start_thread(f,p);
 }
+
 
 
 /*!
