@@ -33,6 +33,8 @@ int main(){
 
     init_device_recipes(CLIENT_ID);
 
+    LOGGER *log = create_console_log("111",CLIENT_ID);
+
     for(int i=0; i < RECIPE_LEN; ++i){
         IOTSEED_RECIPE* r  = create_recipe();
         for(int j=0; j < RECIPE_PARAM_LEN; ++j){
@@ -47,6 +49,8 @@ int main(){
     IOTSEED_RECIPE *t = get_actived_recipe();
 
     printf("%d\n",t->Index);
+
+    write_device_recipes(log);
 
 
     while(!end){

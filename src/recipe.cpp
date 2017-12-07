@@ -4,13 +4,24 @@
 
 #include "recipe.h"
 
+#include "time_utils.h"
+
+#include "log.h"
+
 #include <iostream>
 
 #include <list>
 
 #include <map>
 
+#include "json/json.hpp"
+
+
 using namespace std;
+
+
+// for convenience
+using nlohmann::json;
 
 
 class _iotseed_recipe_param_class_t {
@@ -129,6 +140,15 @@ public:
 };
 
 
+void to_json(json& j, const _iotseed_recipe_param_class_t& p) {
+    j = json{{"index", p.index},
+             {"name", p.name},
+             {"value", p._value},
+             {"unit", p.unit}
+    };
+}
+
+
 class _iotseed_recipe_class_t {
 
     IOTSEED_RECIPE                                  *obj;
@@ -147,6 +167,22 @@ public:
     ~_iotseed_recipe_class_t(){
         delete(this->obj);
     }
+
+    void serialize(json& j){
+        j["LastActivedTimeStamp"] = this->obj->LastActivedTimeStamp;
+        j["Index"] = this->obj->Index;
+        j["Params"] = json::array();
+        for(auto i = this->Params.begin(); i != this->Params.end(); ++i){
+            json _j = i->second;
+            j["Params"].push_back(_j);
+        }
+    }
+
+    void write_recipe(const LOGGER* logger, LOG_LEVEL level){
+        json j;
+        this->serialize(j);
+        write_log(logger,level,j.dump().c_str(),Recipe);
+    }
 };
 
 
@@ -163,6 +199,24 @@ public:
         this->Type = "recipe";// 类型为recipe或者log
     }
 
+    void serialize(json& j){
+        j["ClientID"] = this->ClientID;
+        j["Type"] = this->Type;
+        j["ActivedGroup"] = this->ActivedGroup;
+        j["Recipes"] = json::array();
+        for(auto i = this->Recipes.begin(); i != this->Recipes.end(); ++i){
+            json _j;
+            i->second.serialize(_j);
+            j["Recipes"].push_back(_j);
+        }
+    }
+
+    void write_recipes(const LOGGER* logger, LOG_LEVEL level){
+        json j;
+        this->serialize(j);
+        write_log(logger,level,j.dump().c_str(),Recipe);
+    }
+
 };
 
 
@@ -177,6 +231,15 @@ ST_RET init_device_recipes(const char* client_id){
         g_DeviceRecipes = new DEVICE_RECIPES(client_id);
     }
     return SD_SUCCESS;
+}
+
+ST_RET write_device_recipes(const LOGGER *logger){
+    if(nullptr != g_DeviceRecipes){
+        g_DeviceRecipes->write_recipes(logger, Info);
+
+        return SD_SUCCESS;
+    }
+    return SD_FAILURE;
 }
 
 
@@ -213,6 +276,14 @@ ST_VOID destroy_recipe(IOTSEED_RECIPE* recipe){
 }
 
 
+ST_RET write_recipe(IOTSEED_RECIPE* recipe, const LOGGER *logger, LOG_LEVEL level){
+    if(nullptr != g_DeviceRecipes && g_DeviceRecipes->ActivedGroup){
+        g_DeviceRecipes->Recipes[g_DeviceRecipes->ActivedGroup].write_recipe(logger,level);
+    }
+    return SD_FAILURE;
+}
+
+
 ST_RET active_recipe(const ST_INT32 actived_group){
 
     if(actived_group > (ST_INT32)g_DeviceRecipes->Recipes.size()){
@@ -227,6 +298,10 @@ ST_RET active_recipe(const ST_INT32 actived_group){
     }
 
     g_DeviceRecipes->ActivedGroup = actived_group;
+
+    struct timeval tBegin;
+    gettimeofday(&tBegin, nullptr);
+    g_DeviceRecipes->Recipes[actived_group].to_c_recipe_struct_point()->LastActivedTimeStamp = (ST_INT32)tBegin.tv_sec;
 
     return SD_SUCCESS;
 

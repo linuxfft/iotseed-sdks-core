@@ -47,7 +47,7 @@
 #endif /* windows	*/
 
 
-#if defined(linux) || defined(__LYNX)
+#if defined(__linux__) || defined(__LYNX)
 #include <endian.h>
 #if (__BYTE_ORDER ==__LITTLE_ENDIAN)
 #define SD_BYTE_ORDER	SD_LITTLE_ENDIAN
