@@ -258,8 +258,8 @@ ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, co
     struct mg_connection * _nc = (struct mg_connection *)nc;
     if(nullptr == _nc)
         return SD_FAILURE;
-    mg_mqtt_publish(_nc, topic, msg_id, MG_MQTT_QOS(qos), msg,
-                    strlen(msg) + 1);
+    mg_mqtt_publish(_nc, topic, (uint16_t)msg_id, MG_MQTT_QOS(qos), msg,
+                    strlen(msg));//不能将\0增加到payload中
 
     return SD_SUCCESS;
 }
