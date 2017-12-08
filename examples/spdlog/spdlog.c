@@ -23,6 +23,11 @@ int main(){
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
+    if(set_iotseed_log_async_mode(4096,5) == SD_FAILURE){
+        fprintf(stderr,"设定异步刷新失败\n");
+        exit(1);
+    }; //设定的小些，验证异步刷新,2秒刷新一次
+
     LOGGER *log = create_console_log("111",CLIENT_ID);
 
     LOGGER *log2 = create_daily_log("222", CLIENT_ID,"./test.log",0,0);

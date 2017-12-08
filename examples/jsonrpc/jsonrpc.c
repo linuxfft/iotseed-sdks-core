@@ -79,7 +79,13 @@ int main(){
 
     JSONRPCRequest r1 = create_jsonrpc_request(11, METHOD_SETRECIPE_STR, params);
 
-    dispatch_rpc_method(&r1);
+    char req[1024] = {};
+
+    deserializer_jsonrpc_request(&r1, req);
+
+    printf("%s\n",req);
+
+//    dispatch_rpc_method(&r1);
 
 
 //
