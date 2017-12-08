@@ -42,7 +42,7 @@ ST_RET active_recipe(const ST_INT32 actived_group);
 
 IOTSEED_RECIPE* get_actived_recipe(ST_VOID);
 
-ST_RET write_device_recipes(const LOGGER *logger);
+ST_RET write_device_recipes(const IOTSEED_LOGGER *logger);
 
 IOTSEED_RECIPE_PARAM create_recipe_param(const IOTSEED_RECIPE* recipe, const char *name, const char* unit, const void *value, const IOTSEED_VAL_TYPE type);
 

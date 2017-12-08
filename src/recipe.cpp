@@ -178,10 +178,10 @@ public:
         }
     }
 
-    void write_recipe(const LOGGER* logger, LOG_LEVEL level){
+    void write_recipe(const IOTSEED_LOGGER* logger, IOTSEED_LOG_LEVEL level){
         json j;
         this->serialize(j);
-        write_log(logger,level,j.dump().c_str(),Recipe);
+        iotseed_write_log(logger,level,j.dump().c_str(),Recipe);
     }
 };
 
@@ -211,10 +211,10 @@ public:
         }
     }
 
-    void write_recipes(const LOGGER* logger, LOG_LEVEL level){
+    void write_recipes(const IOTSEED_LOGGER* logger, IOTSEED_LOG_LEVEL level){
         json j;
         this->serialize(j);
-        write_log(logger,level,j.dump().c_str(),Recipe);
+        iotseed_write_log(logger,level,j.dump().c_str(),Recipe);
     }
 
 };
@@ -233,7 +233,7 @@ ST_RET init_device_recipes(const char* client_id){
     return SD_SUCCESS;
 }
 
-ST_RET write_device_recipes(const LOGGER *logger){
+ST_RET write_device_recipes(const IOTSEED_LOGGER *logger){
     if(nullptr != g_DeviceRecipes){
         g_DeviceRecipes->write_recipes(logger, Info);
 
@@ -276,7 +276,7 @@ ST_VOID destroy_recipe(IOTSEED_RECIPE* recipe){
 }
 
 
-ST_RET write_recipe(IOTSEED_RECIPE* recipe, const LOGGER *logger, LOG_LEVEL level){
+ST_RET write_recipe(IOTSEED_RECIPE* recipe, const IOTSEED_LOGGER *logger, IOTSEED_LOG_LEVEL level){
     if(nullptr != g_DeviceRecipes && g_DeviceRecipes->ActivedGroup){
         g_DeviceRecipes->Recipes[g_DeviceRecipes->ActivedGroup].write_recipe(logger,level);
     }

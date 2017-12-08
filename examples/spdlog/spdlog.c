@@ -23,25 +23,25 @@ int main(){
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    if(set_iotseed_log_async_mode(4096,5) == SD_FAILURE){
+    if(iotseed_log_async_mode(4096,5) == SD_FAILURE){
         fprintf(stderr,"设定异步刷新失败\n");
         exit(1);
-    }; //设定的小些，验证异步刷新,2秒刷新一次
+    }; //设定的小些，验证异步刷新,5秒刷新一次
 
-    LOGGER *log = create_console_log("111",CLIENT_ID);
+    IOTSEED_LOGGER *log = iotseed_create_console_log("111",CLIENT_ID);
 
-    LOGGER *log2 = create_daily_log("222", CLIENT_ID,"./test.log",0,0);
+    IOTSEED_LOGGER *log2 = iotseed_create_daily_log("222", CLIENT_ID,"./test.log",0,0);
 
-    LOGGER *log3 = create_rotated_log("333",CLIENT_ID,"./testrotate.log",MAXLOG_FILE_SIZE, MAXLOG_FILE_NUM);
+    IOTSEED_LOGGER *log3 = iotseed_create_rotated_log("333",CLIENT_ID,"./testrotate.log",IOTSEED_MAXLOG_FILE_SIZE, IOTSEED_MAXLOG_FILE_NUM);
 
     while(!end){
-        write_log(log, Critical, "1111", Log);
-        write_log(log2,Info, "2222", Recipe);
-        write_log(log3,Info, "333", Log);
+        iotseed_write_log(log, Critical, "1111", Log);
+        iotseed_write_log(log2,Info, "2222", Recipe);
+        iotseed_write_log(log3,Info, "333", Log);
         sleep(1);
     }
 
-    destroy_logger(&log);
-    destroy_logger(&log2);
-    destroy_logger(&log3);
+    iotseed_destroy_logger(&log);
+    iotseed_destroy_logger(&log2);
+    iotseed_destroy_logger(&log3);
 }
