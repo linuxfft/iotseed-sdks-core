@@ -5,6 +5,18 @@
 #ifndef IOTSEED_SDKS_CORE_SYSINC_H_H
 #define IOTSEED_SDKS_CORE_SYSINC_H_H
 
+
+#ifndef IOTSEED_SDK_VERSION
+#define IOTSEED_SDK_VERSION "0.1"
+#endif
+
+
+#ifndef GET_VERSION
+#define GET_VERSION     IOTSEED_SDK_VERSION
+#define GET_VERSION()   IOTSEED_SDK_VERSION
+#define get_version()   IOTSEED_SDK_VERSION
+#define
+
 #if defined (_WIN32)
 #if !defined (_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
@@ -40,5 +52,7 @@
 #ifndef IOTSEED_CLIENT_ID_MAX
 #define IOTSEED_CLIENT_ID_MAX   63
 #endif
+
+
 
 #endif //IOTSEED_SDKS_CORE_SYSINC_H_H
