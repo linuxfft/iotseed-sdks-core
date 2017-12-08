@@ -38,7 +38,7 @@ public:
         this->unit = _unit;
     }
 
-    void value_to_string(const void *value, const IOTSEED_RECIPE_VAL_TYPE type){
+    void value_to_string(const void *value, const IOTSEED_VAL_TYPE type){
         switch (type){
             case R_VAL_INT8_T:{
                 this->orig_data = new(ST_INT8);
@@ -316,7 +316,7 @@ IOTSEED_RECIPE* get_actived_recipe(ST_VOID){
 
 
 
-IOTSEED_RECIPE_PARAM create_recipe_param(const IOTSEED_RECIPE* recipe, const char *name, const char* unit, const void *value, const IOTSEED_RECIPE_VAL_TYPE type){
+IOTSEED_RECIPE_PARAM create_recipe_param(const IOTSEED_RECIPE* recipe, const char *name, const char* unit, const void *value, const IOTSEED_VAL_TYPE type){
     if(nullptr == g_DeviceRecipes){
 #ifdef IOTSEED_DEBUG
         fprintf(stderr, "请先初始化设备定制组\n");

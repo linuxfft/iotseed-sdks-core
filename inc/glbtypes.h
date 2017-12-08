@@ -90,4 +90,20 @@
 #endif	/* linux	*/
 
 
+typedef enum _enum_value_type_t {
+    R_VAL_INT8_T  = 1,
+    R_VAL_INT16_T,
+    R_VAL_INT32_T,
+    R_VAL_INT64_T,
+    R_VAL_UINT8_T,
+    R_VAL_UINT16_T,
+    R_VAL_UINT32_T,
+    R_VAL_UINT64_T,
+    R_VAL_FLOAT_T,
+    R_VAL_DOUBLE_T,
+    R_VAL_BOOLEAN_T,
+    R_VAL_STRING_T
+}IOTSEED_VAL_TYPE;
+
+
 #endif //IOTSEED_SDKS_CORE_GLBTYPES_H

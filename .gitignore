@@ -12,6 +12,7 @@ cmake-build-release
 examples/mqtt_client/mqtt_client
 examples/spdlog/spdlog
 examples/recipe/recipe
+examples/jsonrpc/jsonrpc
 *.so
 *.log
 *.cbp

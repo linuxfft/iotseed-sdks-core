@@ -17,22 +17,6 @@ extern "C" {
 #include "log.h"
 
 
-typedef enum _enum_recipe_value_type_t {
-    R_VAL_INT8_T  = 1,
-    R_VAL_INT16_T,
-    R_VAL_INT32_T,
-    R_VAL_INT64_T,
-    R_VAL_UINT8_T,
-    R_VAL_UINT16_T,
-    R_VAL_UINT32_T,
-    R_VAL_UINT64_T,
-    R_VAL_FLOAT_T,
-    R_VAL_DOUBLE_T,
-    R_VAL_BOOLEAN_T,
-    R_VAL_STRING_T
-}IOTSEED_RECIPE_VAL_TYPE;
-
-
 typedef struct _iotseed_recipe_param_struct_t {
     ST_INT32    index;
     const ST_CHAR     *name;
@@ -60,7 +44,7 @@ IOTSEED_RECIPE* get_actived_recipe(ST_VOID);
 
 ST_RET write_device_recipes(const LOGGER *logger);
 
-IOTSEED_RECIPE_PARAM create_recipe_param(const IOTSEED_RECIPE* recipe, const char *name, const char* unit, const void *value, const IOTSEED_RECIPE_VAL_TYPE type);
+IOTSEED_RECIPE_PARAM create_recipe_param(const IOTSEED_RECIPE* recipe, const char *name, const char* unit, const void *value, const IOTSEED_VAL_TYPE type);
 
 
 #ifdef __cplusplus

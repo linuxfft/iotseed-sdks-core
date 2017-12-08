@@ -12,10 +12,9 @@
 
 
 #ifndef GET_VERSION
-#define GET_VERSION     IOTSEED_SDK_VERSION
 #define GET_VERSION()   IOTSEED_SDK_VERSION
 #define get_version()   IOTSEED_SDK_VERSION
-#define
+#endif
 
 #if defined (_WIN32)
 #if !defined (_CRT_SECURE_NO_DEPRECATE)
