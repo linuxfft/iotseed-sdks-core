@@ -108,9 +108,7 @@ static LOG_CONFIG* create_log_config(const char *name, const char *clientID){
     auto pCnf = new LOG_CONFIG();
     strcpy(pCnf->pattern,LOG_PATTERN_DEFAULT);
     strcpy(pCnf->clientID, clientID);
-    pCnf->queue_size = 4096;
     pCnf->log_level = Info;
-    pCnf->aync_mode = SD_FALSE;
     strcpy(pCnf->name , name);
     pCnf->log_type = Normal;
     return pCnf;
@@ -163,10 +161,6 @@ ST_RET create_spd_logger(LOGGER* pLogger, const char* name, const char *path, co
     strncpy(pLogger->config->name, name, strlen(name) + 1);
 
     logger->set_pattern(LOG_PATTERN_DEFAULT);
-
-    if(pLogger->config->aync_mode && judge_is_log2((int)pLogger->config->queue_size) ){
-        spd::set_async_mode(pLogger->config->queue_size);
-    }
 
     pLogger->spd_logger = logger.get();
 
@@ -238,42 +232,28 @@ ST_VOID destroy_logger(LOGGER **log){
 
 /*!
  *
- * @param config 日志配置指针
- * @param buf_size 异步模式缓存大小：2的次方
  * @return SD_SUCCESS: 成功
  *         SD_FAILURE: 失败
  */
-ST_RET set_log_config_sync_mode(LOGGER* pLogger){
-    if (iConfigIsNull(pLogger->config)){
-        return SD_FAILURE;
-    }
+ST_RET set_iotseed_log_sync_mode(ST_VOID){
 
     spd::set_sync_mode();
-
-    pLogger->config->aync_mode   =   SD_FALSE;
 
     return SD_SUCCESS;
 }
 
 /*!
  *
- * @param config 日志配置指针
  * @param buf_size 异步模式缓存大小：2的次方
+ * @param seconds 多少秒刷新一次
  * @return SD_SUCCESS: 成功
  *         SD_FAILURE: 失败
  */
-ST_RET set_log_config_async_mode(LOGGER* pLogger, const size_t buf_size){
-    if (iConfigIsNull(pLogger->config)){
-        return SD_FAILURE;
-    }
+ST_RET set_iotseed_log_async_mode(const size_t buf_size, const ST_UINT32 seconds){
     if(!judge_is_log2((int)buf_size)){
         return SD_FAILURE;
     }
-    spd::set_async_mode(buf_size);
-
-    pLogger->config->aync_mode   =   SD_TRUE;
-
-    pLogger->config->queue_size  =   buf_size;
+    spd::set_async_mode(buf_size, spdlog::async_overflow_policy::block_retry, nullptr, std::chrono::seconds(seconds));
 
     return SD_SUCCESS;
 }

@@ -73,8 +73,6 @@ typedef struct _struct_log_config_t {
     LOG_TYPE    log_type;
     char        pattern[LOG_PATTERN_MAX + 1];
     char        clientID[IOTSEED_CLIENT_ID_MAX + 1];
-    ST_BOOLEAN  aync_mode; //默认为异步模式
-    size_t      queue_size; //queue size must be power of 2
     LOG_LEVEL   log_level;
 }LOG_CONFIG;
 
@@ -95,6 +93,10 @@ ST_VOID destroy_logger(LOGGER **log);
 ST_VOID write_log(const LOGGER* logger, LOG_LEVEL level, const char* msg, LOG_INFO_TYPE type);
 
 ST_RET set_log_msg_format(LOGGER* pLogger, const char* format);
+
+ST_RET set_iotseed_log_async_mode(const size_t buf_size, const ST_UINT32 seconds);
+
+ST_RET set_iotseed_log_sync_mode(ST_VOID);
 
 
 

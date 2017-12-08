@@ -84,10 +84,49 @@ ST_VOID dispatch_rpc_method(JSONRPCRequest* request){
 }
 
 
+static void to_json(json& j, JSONRPCRequest& req){
+    j["id"] = req.id;
+    j["jsonrpc"] = req.jsonrpc;
+    j["method"] = req.method;
+    j["params"] = req.params;
+}
+
 JSONRPCRequest create_jsonrpc_request(const ST_UINT32 id, const ST_CHAR *method, const ST_CHAR *params){
     return {id, JSONRPC_VERSION, method, params};
 }
 
+ST_VOID deserializer_jsonrpc_request(const JSONRPCRequest* req, ST_CHAR* cRet){
+    JSONRPCRequest _r = *req;
+    json _j = _r;
+    strncpy(cRet, _j.dump().c_str(), strlen(_j.dump().c_str()) + 1);
+}
+
+JSONRPCResponse create_jsonrpc_response(const ST_UINT32 id, const ST_CHAR *result, IOTSEED_RPC_RESPONSE_TYPE type){
+    return {id, JSONRPC_VERSION, type, result};
+}
+
+static void to_json(json& j, JSONRPCResponse& res){
+    j["id"] = res.id;
+    j["jsonrpc"] = res.jsonrpc;
+    switch (res.type){
+        case RPC_RESP_P:{
+            j["result"] = res.result;
+            break;
+        }
+        case RPC_RESP_N:{
+            j["message"] = res.result;
+            break;
+        }
+        default:
+            return;
+    }
+}
+
+ST_VOID deserializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet){
+    JSONRPCResponse _r = *res;
+    json _j = _r;
+    strncpy(cRet, _j.dump().c_str(), strlen(_j.dump().c_str()) + 1);
+}
 
 ST_VOID insert_jsonrpc_param(const ST_CHAR *params, const ST_CHAR* param_name, const void *param_value, IOTSEED_VAL_TYPE type){
     json _j = json::parse(params);
