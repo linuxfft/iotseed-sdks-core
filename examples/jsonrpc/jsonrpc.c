@@ -2,7 +2,11 @@
 // Created by gubin on 17-12-7.
 //
 
+#include "glbinc.h"
+
 #include "jsonrpc.h"
+
+#include "recipe.h"
 
 #include <unistd.h>
 
@@ -47,6 +51,13 @@ void activerecipe(void *req, void *data){
     printf("%d\n",request->id);
     printf("%s\n",request->jsonrpc);
     printf("%s\n",request->params);
+    int index;
+    char name[100]= {};
+    char value[100] = {};
+    ST_BOOLEAN b;
+    get_jsonrpc_param(request->params,1, name,&index, R_VAL_INT32_T);
+    get_jsonrpc_param(request->params,2, name,&b, R_VAL_BOOLEAN_T);
+    get_jsonrpc_param(request->params,3, name,&value, R_VAL_STRING_T);
     if(NULL != data)
         printf("%s\n",(char*)data);
 }
@@ -60,9 +71,9 @@ int main(){
     const ST_CHAR params[1024] = {};
 
 
-    registry_iotseed_rpc_method(METHOD_SETRECIPE, setrecipe, NULL);
+    registry_iotseed_recipe_rpc_method(RPC_METHOD_SETRECIPE, setrecipe, NULL);
 
-    registry_iotseed_rpc_method(METHOD_ACTIVERECIPE, activerecipe, NULL);
+    registry_iotseed_recipe_rpc_method(RPC_METHOD_ACTIVERECIPE, activerecipe, NULL);
 
 
     int i = 500;
@@ -77,7 +88,9 @@ int main(){
     insert_jsonrpc_param(params, "xx", &x, R_VAL_BOOLEAN_T);
     insert_jsonrpc_param(params, "ee", dummy, R_VAL_STRING_T);
 
-    JSONRPCRequest r1 = create_jsonrpc_request(11, METHOD_SETRECIPE_STR, params);
+    JSONRPCRequest r1 = create_jsonrpc_request(11, RPC_METHOD_SETRECIPE_STR, params);
+
+    JSONRPCRequest r2 = create_jsonrpc_request(13, RPC_METHOD_ACTIVERECIPE_STR, params);
 
     char req[1024] = {};
 
@@ -85,7 +98,14 @@ int main(){
 
     printf("%s\n",req);
 
-//    dispatch_rpc_method(&r1);
+    dispatch_rpc_method(&r1);
+
+    deserializer_jsonrpc_request(&r1, req);
+
+    printf("%s\n",req);
+
+    dispatch_rpc_method(&r2);
+
 
 
 //

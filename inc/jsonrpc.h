@@ -15,16 +15,7 @@ extern "C" {
 #endif
 
 
-#include "sysinc.h"
-
-#include "glbtypes.h"
-
-#include "recipe.h"
-
-
-
-#define METHOD_SETRECIPE_STR    "setRecipe"
-#define METHOD_ACTIVERECIPE_STR "activeRecipe"
+#include "glbinc.h"
 
 
 typedef void (*iotseed_rpc_handler_t)(void* params, void* user_data);
@@ -33,12 +24,6 @@ typedef enum _enum_iotseed_rpc_response_t {
     RPC_RESP_P = 1, //positive
     RPC_RESP_N = 2 //negative
 }IOTSEED_RPC_RESPONSE_TYPE;
-
-
-typedef enum _enum_iotseed_rpc_method_t {
-    METHOD_SETRECIPE = 1,
-    METHOD_ACTIVERECIPE = 2
-}IOTSEED_RPC_METHOD;
 
 
 
@@ -66,7 +51,7 @@ typedef struct _JSONRPCResponse_commonstruct_t {
  * @param user_data: 需要传递的用户数据
  * @return
  */
-ST_RET registry_iotseed_rpc_method(IOTSEED_RPC_METHOD _method, iotseed_rpc_handler_t f, void *user_data);
+ST_RET registry_iotseed_rpc_method(const char* _method, iotseed_rpc_handler_t f, void *user_data);
 
 ST_VOID dispatch_rpc_method(JSONRPCRequest* request);
 

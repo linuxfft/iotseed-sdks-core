@@ -6,8 +6,6 @@
 
 #include "time_utils.h"
 
-#include "log.h"
-
 #include <iostream>
 
 #include <list>
@@ -340,3 +338,21 @@ ST_VOID destroy_recipe_param(IOTSEED_RECIPE_PARAM **param){
 //ST_RET insert_recipe_param(IOTSEED_RECIPE *pRecipe, const IOTSEED_RECIPE_PARAM *pRecipeParam){
 //
 //}
+
+ST_RET registry_iotseed_recipe_rpc_method(IOTSEED_RPC_METHOD _method, iotseed_rpc_handler_t f, void *user_data){
+    switch (_method){
+        case RPC_METHOD_SETRECIPE:{
+            registry_iotseed_rpc_method(RPC_METHOD_SETRECIPE_STR, f, user_data);
+            break;
+        }
+        case RPC_METHOD_ACTIVERECIPE:{
+            registry_iotseed_rpc_method(RPC_METHOD_ACTIVERECIPE_STR, f, user_data);
+            break;
+        }
+        default:
+#ifdef IOTSEED_DEBUG
+            fprintf(stderr,"不支持此方法\n");
+#endif
+            return SD_FAILURE;
+    }
+}

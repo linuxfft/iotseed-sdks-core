@@ -10,12 +10,11 @@
 extern "C" {
 #endif
 
-#include "sysinc.h"
-
-#include "glbtypes.h"
+#include "glbinc.h"
 
 #include "log.h"
 
+#include "jsonrpc.h"
 
 typedef struct _iotseed_recipe_param_struct_t {
     ST_INT32    index;
@@ -46,6 +45,7 @@ ST_RET write_device_recipes(const IOTSEED_LOGGER *logger);
 
 IOTSEED_RECIPE_PARAM create_recipe_param(const IOTSEED_RECIPE* recipe, const char *name, const char* unit, const void *value, const IOTSEED_VAL_TYPE type);
 
+ST_RET registry_iotseed_recipe_rpc_method(IOTSEED_RPC_METHOD _method, iotseed_rpc_handler_t f, void *user_data);
 
 #ifdef __cplusplus
 }

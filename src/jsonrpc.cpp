@@ -27,11 +27,11 @@ class _iotseed_rpc_method_t{
 private:
     iotseed_rpc_handler_t                       f_name;
     void                                        *user_data;
-    IOTSEED_RPC_METHOD                          method;
+    const char                                  *method;
 public:
-    explicit  _iotseed_rpc_method_t(IOTSEED_RPC_METHOD _method, iotseed_rpc_handler_t f, void *_user_data): method(_method), f_name(f), user_data(_user_data){};
+    explicit  _iotseed_rpc_method_t(const char *_method, iotseed_rpc_handler_t f, void *_user_data): method(_method), f_name(f), user_data(_user_data){};
 
-    IOTSEED_RPC_METHOD get_method_enum(){
+    const char* get_method_enum(){
         return this->method;
     }
 
@@ -195,6 +195,13 @@ ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name
         return SD_FAILURE;
     }
     json o = _j[index - 1];
+    if(o.is_array()){
+        //
+    }
+    if(o.is_structured()){
+        //
+    }
+    if(o.is_primitive())
     // special iterator member functions for objects
     for (json::iterator it = o.begin(); it != o.end(); ++it) {
         strncpy(name, it.key().c_str(), strlen(it.key().c_str()) + 1);
@@ -248,20 +255,6 @@ ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name
 }
 
 
-ST_RET registry_iotseed_rpc_method(IOTSEED_RPC_METHOD _method, iotseed_rpc_handler_t f, void *user_data){
-    switch (_method){
-        case METHOD_SETRECIPE:{
-            g_IOTSeedRPCMethodsDict.emplace(METHOD_SETRECIPE_STR, _iotseed_rpc_method_t(_method,f, user_data));
-            break;
-        }
-        case METHOD_ACTIVERECIPE:{
-            g_IOTSeedRPCMethodsDict.emplace(METHOD_ACTIVERECIPE_STR, _iotseed_rpc_method_t(_method,f, user_data));
-            break;
-        }
-        default:
-#ifdef IOTSEED_DEBUG
-            fprintf(stderr,"不支持此方法\n");
-#endif
-            return SD_FAILURE;
-    }
+ST_RET registry_iotseed_rpc_method(const char* _method, iotseed_rpc_handler_t f, void *user_data){
+    g_IOTSeedRPCMethodsDict.emplace(_method, _iotseed_rpc_method_t(_method,f, user_data));
 }
