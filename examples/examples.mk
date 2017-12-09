@@ -1,5 +1,5 @@
 SOURCES = $(PROG).c
-CFLAGS = -g -W -Wall -Werror -I../../inc -Wno-unused-function $(CFLAGS_EXTRA) $(MODULE_CFLAGS) -L../../cmake-build-debug
+CFLAGS = -g -W -Wall -I../../inc -Wno-unused-function $(CFLAGS_EXTRA) $(MODULE_CFLAGS) -L../../cmake-build-debug
 
 all: $(PROG)
 

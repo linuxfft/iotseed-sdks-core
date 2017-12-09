@@ -52,14 +52,14 @@ private:
 
 
 public:
-    explicit _iotseed_jsonrpc_request_class_t(const char *req_msg){
-        this->request = json::parse(req_msg);//因为这是jsonRPC payload 进行检查
-        this->obj = JSONRPCRequest{this->request.at("id").get<ST_UINT32>(),
-                                   this->request.at("jsonrpc").get<std::string>().c_str(),
-                                   this->request.at("method").get<std::string>().c_str(),
-                                   this->request.at("params").get<std::string>().c_str(),
-        };
-    }
+//    explicit _iotseed_jsonrpc_request_class_t(const char *req_msg){
+//        this->request = json::parse(req_msg);//因为这是jsonRPC payload 进行检查
+//        this->obj = JSONRPCRequest{this->request.at("id").get<ST_UINT32>(),
+//                                   this->request.at("jsonrpc").get<std::string>().c_str(),
+//                                   this->request.at("method").get<std::string>().c_str(),
+//                                   this->request.at("params").get<std::string>().c_str(),
+//        };
+//    }
 
     explicit _iotseed_jsonrpc_request_class_t(const JSONRPCRequest req){
         this->obj = req;
@@ -79,6 +79,8 @@ public:
 
 
 ST_VOID dispatch_rpc_method(JSONRPCRequest* request){
+    if(nullptr == request)
+        return;
     g_IOTSeedRPCMethodsDict.at(request->method).run_rpc_handler(request);
 
 }
@@ -91,18 +93,55 @@ static void to_json(json& j, JSONRPCRequest& req){
     j["params"] = req.params;
 }
 
-JSONRPCRequest create_jsonrpc_request(const ST_UINT32 id, const ST_CHAR *method, const ST_CHAR *params){
-    return {id, JSONRPC_VERSION, method, params};
+static void deserializer_jsonrpc_request_part2(const json& j, JSONRPCRequest* req){
+
+    if(strlen(j.at("method").get<std::string>().c_str()) > IOTSEED_RPC_METHOD_MAX || strlen(j.at("params").get<std::string>().c_str()) > IOTSEED_RPC_PARAMS_MAX)
+        return;
+    req->id = j.at("id").get<int>();
+    req->jsonrpc = (char*)JSONRPC_VERSION;
+    strncpy(req->method,j.at("method").get<std::string>().c_str(),strlen(j.at("method").get<std::string>().c_str()) + 1);
+    strncpy(req->params,j.at("params").get<std::string>().c_str(),strlen(j.at("params").get<std::string>().c_str()) + 1);
 }
 
-ST_VOID deserializer_jsonrpc_request(const JSONRPCRequest* req, ST_CHAR* cRet){
+ST_RET init_jsonrpc_request(JSONRPCRequest *req, const ST_UINT32 id,  ST_CHAR *method){
+    if(nullptr == req){
+        return SD_FAILURE;
+    }
+    if(strlen(method) > IOTSEED_RPC_METHOD_MAX){
+        return SD_FAILURE;
+    }
+    memset(req,0, sizeof(JSONRPCRequest)); //清除整个结构体空间.
+    strncpy(req->method, method, strlen(method) + 1);
+    req->id = id;
+    req->jsonrpc = (char*)JSONRPC_VERSION; //常量直接赋值即可
+    return SD_SUCCESS;
+}
+
+ST_VOID serializer_jsonrpc_request(const JSONRPCRequest* req, ST_CHAR* cRet){
     JSONRPCRequest _r = *req;
     json _j = _r;
     strncpy(cRet, _j.dump().c_str(), strlen(_j.dump().c_str()) + 1);
 }
 
-JSONRPCResponse create_jsonrpc_response(const ST_UINT32 id, const ST_CHAR *result, IOTSEED_RPC_RESPONSE_TYPE type){
-    return {id, JSONRPC_VERSION, type, result};
+#if 1
+ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cRet,JSONRPCRequest* req){
+    json _j = json::parse(cRet);
+#ifdef IOTSEED_DEBUG
+    // special iterator member functions for objects
+    for (json::iterator it = _j.begin(); it != _j.end(); ++it) {
+        std::cout << it.key() << " : " << it.value() << "\n";
+    }
+#endif
+    deserializer_jsonrpc_request_part2(_j, req);
+}
+#endif
+
+ST_RET init_jsonrpc_response(JSONRPCResponse* res, const ST_UINT32 id,IOTSEED_RPC_RESPONSE_TYPE type){
+    if(nullptr == res)
+        return SD_FAILURE;
+    res->id = id;
+    res->jsonrpc = (char*)JSONRPC_VERSION;
+    res->type = type;
 }
 
 static void to_json(json& j, JSONRPCResponse& res){
@@ -122,14 +161,21 @@ static void to_json(json& j, JSONRPCResponse& res){
     }
 }
 
-ST_VOID deserializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet){
+ST_VOID serializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet){
     JSONRPCResponse _r = *res;
     json _j = _r;
     strncpy(cRet, _j.dump().c_str(), strlen(_j.dump().c_str()) + 1);
 }
 
-ST_VOID insert_jsonrpc_param(const ST_CHAR *params, const ST_CHAR* param_name, const void *param_value, IOTSEED_VAL_TYPE type){
-    json _j = json::parse(params);
+ST_VOID insert_jsonrpc_param(JSONRPCRequest *req, const ST_CHAR* param_name, const void *param_value, IOTSEED_VAL_TYPE type){
+    json _j;
+    if(0 == strlen(req->params)){
+        //为空 先初始化一个json array
+        _j = json::array();
+    } else{
+        //不为空，已存在数据
+        _j = json::parse(req->params);
+    }
     json _param;
     switch (type){
         case R_VAL_INT8_T:
@@ -176,18 +222,20 @@ ST_VOID insert_jsonrpc_param(const ST_CHAR *params, const ST_CHAR* param_name, c
 
     }
     _j.push_back(_param);
-    memcpy((void*)params,_j.dump().c_str(),strlen(_j.dump().c_str()));
-}
-
-
-ST_VOID create_jsonrpc_params(const ST_CHAR *params){
-    json _j = json::array();
-    const char* _c = _j.dump().c_str();
-    memcpy((void*)params,_c,strlen(_c));
+    if(strlen(_j.dump().c_str()) > IOTSEED_RPC_PARAMS_MAX)
+        return;
+    memcpy((void*)req->params,_j.dump().c_str(),strlen(_j.dump().c_str()) + 1);
 }
 
 ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name, void *value, IOTSEED_VAL_TYPE type){
-    json _j = json::parse(params);
+    json _j;
+    if(0 == strlen(params))
+        return SD_FAILURE;
+    try{
+         _j = json::parse(params);
+    }catch (...){
+        return SD_FAILURE;
+    }
     if(index > _j.size()){
 #ifdef IOTSEED_DEBUG
         fprintf(stderr,"获取参数索引超限:%u\n",(unsigned int)_j.size());
@@ -195,13 +243,13 @@ ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name
         return SD_FAILURE;
     }
     json o = _j[index - 1];
-    if(o.is_array()){
-        //
-    }
-    if(o.is_structured()){
-        //
-    }
-    if(o.is_primitive())
+//    if(o.is_array()){
+//        //
+//    }
+//    if(o.is_structured()){
+//        //
+//    }
+//    if(o.is_primitive())
     // special iterator member functions for objects
     for (json::iterator it = o.begin(); it != o.end(); ++it) {
         strncpy(name, it.key().c_str(), strlen(it.key().c_str()) + 1);

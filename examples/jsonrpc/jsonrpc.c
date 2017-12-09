@@ -68,9 +68,6 @@ int main(){
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    const ST_CHAR params[1024] = {};
-
-
     registry_iotseed_recipe_rpc_method(RPC_METHOD_SETRECIPE, setrecipe, NULL);
 
     registry_iotseed_recipe_rpc_method(RPC_METHOD_ACTIVERECIPE, activerecipe, NULL);
@@ -82,29 +79,39 @@ int main(){
 
     const char* dummy = "dummy";
 
-    create_jsonrpc_params(params);
+    JSONRPCRequest r1;
+    init_jsonrpc_request(&r1, 11, RPC_METHOD_SETRECIPE_STR);
 
-    insert_jsonrpc_param(params, "Index", &i, R_VAL_INT64_T);
-    insert_jsonrpc_param(params, "xx", &x, R_VAL_BOOLEAN_T);
-    insert_jsonrpc_param(params, "ee", dummy, R_VAL_STRING_T);
+    insert_jsonrpc_param(&r1, "Index", &i, R_VAL_INT32_T);
+    insert_jsonrpc_param(&r1, "xx", &x, R_VAL_BOOLEAN_T);
+    insert_jsonrpc_param(&r1, "ee", dummy, R_VAL_STRING_T);
 
-    JSONRPCRequest r1 = create_jsonrpc_request(11, RPC_METHOD_SETRECIPE_STR, params);
-
-    JSONRPCRequest r2 = create_jsonrpc_request(13, RPC_METHOD_ACTIVERECIPE_STR, params);
+    JSONRPCRequest r2;
+    init_jsonrpc_request(&r2, 13, RPC_METHOD_ACTIVERECIPE_STR);
 
     char req[1024] = {};
 
-    deserializer_jsonrpc_request(&r1, req);
+    //第一组参数验证
+    serializer_jsonrpc_request(&r1, req);
 
     printf("%s\n",req);
 
-    dispatch_rpc_method(&r1);
+    JSONRPCRequest r3;
 
-    deserializer_jsonrpc_request(&r1, req);
+    deserializer_jsonrpc_request(req, &r3);
+
+    dispatch_rpc_method(&r3);
+
+    //第二组参数验证;
+    serializer_jsonrpc_request(&r2, req);
 
     printf("%s\n",req);
 
-    dispatch_rpc_method(&r2);
+    JSONRPCRequest r4;
+
+    deserializer_jsonrpc_request(req, &r4);
+
+    dispatch_rpc_method(&r4);
 
 
 
