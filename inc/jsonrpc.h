@@ -72,7 +72,7 @@ ST_RET init_jsonrpc_request(JSONRPCRequest *req, const ST_UINT32 id,  ST_CHAR *m
 
 ST_VOID serializer_jsonrpc_request(const JSONRPCRequest* req, ST_CHAR* cRet);
 
-ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cRet,JSONRPCRequest* req);
+ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cSrc,JSONRPCRequest* req);
 
 /*!
  *

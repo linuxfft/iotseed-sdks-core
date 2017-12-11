@@ -45,6 +45,7 @@ typedef map<std::string,_iotseed_rpc_method_t> IOTSEED_RPC_METHOD_MAP ;
 static IOTSEED_RPC_METHOD_MAP g_IOTSeedRPCMethodsDict;
 
 
+#if 0
 class _iotseed_jsonrpc_request_class_t{
 private:
     JSONRPCRequest                  obj;
@@ -76,6 +77,7 @@ public:
     }
 
 };
+#endif
 
 
 ST_VOID dispatch_rpc_method(JSONRPCRequest* request){
@@ -86,7 +88,7 @@ ST_VOID dispatch_rpc_method(JSONRPCRequest* request){
 }
 
 
-static void to_json(json& j, JSONRPCRequest& req){
+static void to_json(json& j, const JSONRPCRequest& req){
     j["id"] = req.id;
     j["jsonrpc"] = req.jsonrpc;
     j["method"] = req.method;
@@ -123,9 +125,8 @@ ST_VOID serializer_jsonrpc_request(const JSONRPCRequest* req, ST_CHAR* cRet){
     strncpy(cRet, _j.dump().c_str(), strlen(_j.dump().c_str()) + 1);
 }
 
-#if 1
-ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cRet,JSONRPCRequest* req){
-    json _j = json::parse(cRet);
+ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cSrc,JSONRPCRequest* req){
+    json _j = json::parse(cSrc);
 #ifdef IOTSEED_DEBUG
     // special iterator member functions for objects
     for (json::iterator it = _j.begin(); it != _j.end(); ++it) {
@@ -134,7 +135,6 @@ ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cRet,JSONRPCRequest* req){
 #endif
     deserializer_jsonrpc_request_part2(_j, req);
 }
-#endif
 
 ST_RET init_jsonrpc_response(JSONRPCResponse* res, const ST_UINT32 id,IOTSEED_RPC_RESPONSE_TYPE type){
     if(nullptr == res)
@@ -216,7 +216,7 @@ ST_VOID insert_jsonrpc_param(JSONRPCRequest *req, const ST_CHAR* param_name, con
             break;
         default:
 #ifdef IOTSEED_DEBUG
-            fprintf(stderr,"不支持此方法\n");
+            fprintf(stderr,"不支持此数据类型\n");
 #endif
             break;
 
@@ -293,7 +293,7 @@ ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name
                 break;
             default:
 #ifdef IOTSEED_DEBUG
-                fprintf(stderr,"不支持此方法\n");
+                fprintf(stderr,"不支持此数据类型\n");
 #endif
                 return SD_FAILURE;
         }
