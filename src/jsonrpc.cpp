@@ -89,20 +89,30 @@ ST_VOID dispatch_rpc_method(JSONRPCRequest* request){
 
 
 static void to_json(json& j, const JSONRPCRequest& req){
-    j["id"] = req.id;
-    j["jsonrpc"] = req.jsonrpc;
-    j["method"] = req.method;
-    j["params"] = req.params;
+    j[IOTSEED_RPC_KEY_ID] = req.id;
+    j[IOTSEED_RPC_KEY_JSONRPC] = req.jsonrpc;
+    j[IOTSEED_RPC_KEY_METHOD] = req.method;
+    j[IOTSEED_RPC_KEY_PARAMS] = json::parse(req.params);
 }
 
-static void deserializer_jsonrpc_request_part2(const json& j, JSONRPCRequest* req){
+static void deserializer_jsonrpc_request_part1(const json& j, JSONRPCRequest* req){
 
-    if(strlen(j.at("method").get<std::string>().c_str()) > IOTSEED_RPC_METHOD_MAX || strlen(j.at("params").get<std::string>().c_str()) > IOTSEED_RPC_PARAMS_MAX)
+    if(strlen(j.at(IOTSEED_RPC_KEY_METHOD).get<std::string>().c_str()) > IOTSEED_RPC_METHOD_MAX )
         return;
-    req->id = j.at("id").get<int>();
+
+    req->id = j.at(IOTSEED_RPC_KEY_ID).get<int>();
     req->jsonrpc = (char*)JSONRPC_VERSION;
-    strncpy(req->method,j.at("method").get<std::string>().c_str(),strlen(j.at("method").get<std::string>().c_str()) + 1);
-    strncpy(req->params,j.at("params").get<std::string>().c_str(),strlen(j.at("params").get<std::string>().c_str()) + 1);
+    strncpy(req->method,j.at(IOTSEED_RPC_KEY_METHOD).get<std::string>().c_str(),strlen(j.at(IOTSEED_RPC_KEY_METHOD).get<std::string>().c_str()) + 1);
+
+    if(j[IOTSEED_RPC_KEY_PARAMS].is_array())
+    {
+        strncpy(req->params, j[IOTSEED_RPC_KEY_PARAMS].dump().c_str(), strlen(j[IOTSEED_RPC_KEY_PARAMS].dump().c_str()));
+    }
+    else
+    {
+        strncpy(req->params, j.at(IOTSEED_RPC_KEY_PARAMS).get<std::string>().c_str(), strlen(j.at(IOTSEED_RPC_KEY_PARAMS).get<std::string>().c_str() + 1));
+    }
+
 }
 
 ST_RET init_jsonrpc_request(JSONRPCRequest *req, const ST_UINT32 id,  ST_CHAR *method){
@@ -126,6 +136,7 @@ ST_VOID serializer_jsonrpc_request(const JSONRPCRequest* req, ST_CHAR* cRet){
 }
 
 ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cSrc,JSONRPCRequest* req){
+    memset(req->params, 0, sizeof(req->params));
     json _j = json::parse(cSrc);
 #ifdef IOTSEED_DEBUG
     // special iterator member functions for objects
@@ -133,7 +144,7 @@ ST_VOID deserializer_jsonrpc_request(const ST_CHAR* cSrc,JSONRPCRequest* req){
         std::cout << it.key() << " : " << it.value() << "\n";
     }
 #endif
-    deserializer_jsonrpc_request_part2(_j, req);
+    deserializer_jsonrpc_request_part1(_j, req);
 }
 
 ST_RET init_jsonrpc_response(JSONRPCResponse* res, const ST_UINT32 id,IOTSEED_RPC_RESPONSE_TYPE type){
@@ -145,15 +156,15 @@ ST_RET init_jsonrpc_response(JSONRPCResponse* res, const ST_UINT32 id,IOTSEED_RP
 }
 
 static void to_json(json& j, JSONRPCResponse& res){
-    j["id"] = res.id;
-    j["jsonrpc"] = res.jsonrpc;
+    j[IOTSEED_RPC_KEY_ID] = res.id;
+    j[IOTSEED_RPC_KEY_JSONRPC] = res.jsonrpc;
     switch (res.type){
         case RPC_RESP_P:{
-            j["result"] = res.result;
+            j[IOTSEED_RPC_KEY_RESULT] = res.result;
             break;
         }
         case RPC_RESP_N:{
-            j["message"] = res.result;
+            j[IOTSEED_RPC_KEY_ERROR] = res.result;
             break;
         }
         default:
@@ -161,13 +172,45 @@ static void to_json(json& j, JSONRPCResponse& res){
     }
 }
 
-ST_VOID serializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet){
+ST_VOID serializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet, ST_BOOLEAN result_as_object){
     JSONRPCResponse _r = *res;
     json _j = _r;
+
+    _j.erase("type");
+    _j.erase("result");
+
+    if(_r.type == RPC_RESP_P)
+    {
+        // 肯定响应
+        _j[IOTSEED_RPC_KEY_RESULT] = json::parse(_r.result);
+    }
+    else if(_r.type == RPC_RESP_N)
+    {
+        // 否定响应
+        _j[IOTSEED_RPC_KEY_ERROR] = json::parse(_r.result);
+    }
+
     strncpy(cRet, _j.dump().c_str(), strlen(_j.dump().c_str()) + 1);
 }
 
+ST_VOID insert_jsonrpc_param2(JSONRPCRequest *req, const ST_CHAR* param_name, const void *param_value, IOTSEED_VAL_TYPE type){
+    switch (type){
+        case R_VAL_OBJECT_T:
+
+            break;
+    }
+}
+
+ST_VOID set_jsonrpc_response_param(JSONRPCResponse *response, const void *param_value)
+{
+    json _j = json::object();
+
+    _j = *(json*)param_value;
+    memcpy((void*)response->result,_j.dump().c_str(),strlen(_j.dump().c_str()) + 1);
+}
+
 ST_VOID insert_jsonrpc_param(JSONRPCRequest *req, const ST_CHAR* param_name, const void *param_value, IOTSEED_VAL_TYPE type){
+
     json _j;
     if(0 == strlen(req->params)){
         //为空 先初始化一个json array
@@ -213,6 +256,9 @@ ST_VOID insert_jsonrpc_param(JSONRPCRequest *req, const ST_CHAR* param_name, con
             break;
         case R_VAL_STRING_T:
             _param[param_name] = string((char*)param_value);
+            break;
+        case R_VAL_OBJECT_T:
+            _param[param_name] = *(json*)param_value;
             break;
         default:
 #ifdef IOTSEED_DEBUG

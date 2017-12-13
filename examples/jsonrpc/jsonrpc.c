@@ -68,26 +68,38 @@ int main(){
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
+    init_device_recipes(CLIENT_ID);
+
+    for(int i=0; i < RECIPE_LEN; ++i){
+        IOTSEED_RECIPE* r  = create_recipe();
+        for(int j=0; j < RECIPE_PARAM_LEN; ++j){
+            double value = 14;
+            create_recipe_param(r, "加速度", "m/s/s", &value, R_VAL_DOUBLE_T);
+        }
+    }
+
     registry_iotseed_recipe_rpc_method(RPC_METHOD_SETRECIPE, setrecipe, NULL);
 
     registry_iotseed_recipe_rpc_method(RPC_METHOD_ACTIVERECIPE, activerecipe, NULL);
 
 
-    int i = 500;
-
-    ST_BOOLEAN x = SD_TRUE;
-
-    const char* dummy = "dummy";
+//    int i = 500;
+//
+//    ST_BOOLEAN x = SD_TRUE;
+//
+//    const char* dummy = "dummy";
 
     JSONRPCRequest r1;
     init_jsonrpc_request(&r1, 11, RPC_METHOD_SETRECIPE_STR);
 
-    insert_jsonrpc_param(&r1, "Index", &i, R_VAL_INT32_T);
-    insert_jsonrpc_param(&r1, "xx", &x, R_VAL_BOOLEAN_T);
-    insert_jsonrpc_param(&r1, "ee", dummy, R_VAL_STRING_T);
+    seriral_device_recipes(&r1);
 
-    JSONRPCRequest r2;
-    init_jsonrpc_request(&r2, 13, RPC_METHOD_ACTIVERECIPE_STR);
+//    insert_jsonrpc_param(&r1, "Index", &i, R_VAL_INT32_T);
+//    insert_jsonrpc_param(&r1, "xx", &x, R_VAL_BOOLEAN_T);
+//    insert_jsonrpc_param(&r1, "ee", dummy, R_VAL_STRING_T);
+//
+//    JSONRPCRequest r2;
+//    init_jsonrpc_request(&r2, 13, RPC_METHOD_ACTIVERECIPE_STR);
 
     char req[1024] = {};
 
@@ -96,22 +108,22 @@ int main(){
 
     printf("%s\n",req);
 
-    JSONRPCRequest r3;
-
-    deserializer_jsonrpc_request(req, &r3);
-
-    dispatch_rpc_method(&r3);
-
-    //第二组参数验证;
-    serializer_jsonrpc_request(&r2, req);
-
-    printf("%s\n",req);
-
-    JSONRPCRequest r4;
-
-    deserializer_jsonrpc_request(req, &r4);
-
-    dispatch_rpc_method(&r4);
+//    JSONRPCRequest r3;
+//
+//    deserializer_jsonrpc_request(req, &r3);
+//
+//    dispatch_rpc_method(&r3);
+//
+//    //第二组参数验证;
+//    serializer_jsonrpc_request(&r2, req);
+//
+//    printf("%s\n",req);
+//
+//    JSONRPCRequest r4;
+//
+//    deserializer_jsonrpc_request(req, &r4);
+//
+//    dispatch_rpc_method(&r4);
 
 
 

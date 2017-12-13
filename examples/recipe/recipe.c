@@ -42,7 +42,6 @@ int main(){
         }
     }
 
-
     active_recipe(1);
 
     IOTSEED_RECIPE *t = get_actived_recipe();
