@@ -4,7 +4,7 @@ project(iotseed_sdks_core)
 set(CMAKE_CXX_STANDARD 11)
 include_directories(inc lib)
 add_definitions(-DMG_ENABLE_CALLBACK_USERDATA -DMG_ENABLE_HTTP=0 -DMG_ENABLE_SSL -DMG_ENABLE_THREADS)
-add_definitions(-DIOTSEED_RPC_RESULT_MAX=1024 -DIOTSEED_RPC_PARAMS_MAX=2048) #设定关于RPC的宏定义
+add_definitions(-DIOTSEED_RPC_RESULT_MAX=8192 -DIOTSEED_RPC_PARAMS_MAX=8192) #设定关于RPC的宏定义
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W -Wall -Werror -Wno-unused-function")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow -Wextra")
 
