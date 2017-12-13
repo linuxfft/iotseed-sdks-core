@@ -18,7 +18,7 @@ extern "C" {
 #include "glbinc.h"
 
 #ifndef IOTSEED_RPC_PARAMS_MAX
-#define IOTSEED_RPC_PARAMS_MAX  1024
+#define IOTSEED_RPC_PARAMS_MAX  4096
 #endif
 
 #ifndef IOTSEED_RPC_METHOD_MAX
@@ -26,8 +26,15 @@ extern "C" {
 #endif
 
 #ifndef IOTSEED_RPC_RESULT_MAX
-#define IOTSEED_RPC_RESULT_MAX  1024
+#define IOTSEED_RPC_RESULT_MAX  4096
 #endif
+
+#define IOTSEED_RPC_KEY_ID              "id"
+#define IOTSEED_RPC_KEY_JSONRPC         "jsonrpc"
+#define IOTSEED_RPC_KEY_METHOD          "method"
+#define IOTSEED_RPC_KEY_PARAMS          "params"
+#define IOTSEED_RPC_KEY_RESULT          "result"
+#define IOTSEED_RPC_KEY_ERROR           "error"
 
 typedef void (*iotseed_rpc_handler_t)(void* params, void* user_data);
 
@@ -86,7 +93,9 @@ ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name
 
 ST_RET init_jsonrpc_response(JSONRPCResponse* res, const ST_UINT32 id,IOTSEED_RPC_RESPONSE_TYPE type);
 
-ST_VOID serializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet);
+ST_VOID serializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet, ST_BOOLEAN result_as_object);
+
+ST_VOID set_jsonrpc_response_param(JSONRPCResponse *response, const void *param_value);
 
 #ifdef __cplusplus
 }

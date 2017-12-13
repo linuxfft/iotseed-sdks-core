@@ -9,6 +9,7 @@ CTestTestfile.cmake
 cmake-build-debug
 cmake-build-release
 .idea
+.vs
 examples/mqtt_client/mqtt_client
 examples/spdlog/spdlog
 examples/recipe/recipe

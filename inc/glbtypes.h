@@ -102,7 +102,8 @@ typedef enum _enum_value_type_t {
     R_VAL_FLOAT_T,
     R_VAL_DOUBLE_T,
     R_VAL_BOOLEAN_T,
-    R_VAL_STRING_T
+    R_VAL_STRING_T,
+    R_VAL_OBJECT_T
 }IOTSEED_VAL_TYPE;
 
 

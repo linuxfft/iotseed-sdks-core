@@ -7,6 +7,7 @@
 #include "time_utils.h"
 
 #include <signal.h>
+#include "recipe.h"
 
 
 static const char *s_address = "mqtt.hub.cloudahead.net:31883"; // mqtt broker by CloudAhead
@@ -19,12 +20,101 @@ static char *s_device_id;
 
 static int end = 0;
 
+// 工艺下发
+void fn_set_recipe(void *request, void *user_data)
+{
+    char response_payload[4096];
+    memset(response_payload, 0, sizeof(response_payload));
+
+    char response_topic[128];
+    memset(response_topic, 0, sizeof(response_topic));
+
+    JSONRPCRequest *rpc_request = (JSONRPCRequest *)request;
+    IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
+
+    // 解析工艺下发请求
+    IOTSEED_RPC_SET_RECIPE_PARAM param;
+    IOTSEED_RECIPE *recipe = handler_set_recipe_params(&param, rpc_request->params);
+
+    if(recipe)
+    {
+        // 设置成功，返回肯定响应
+        IOTSEED_RPC_SET_RECIPE_RESULT result;
+        result.code = 0;
+        result.Recipes[0].Index = recipe->Index;
+
+        serializer_set_recipe_result(response_payload, &result, rpc_request->id);
+
+    }
+    else
+    {
+        // 错误，否定响应
+        IOTSEED_RPC_ERROR_MESSAGE error;
+        error.code = -100;
+        strcpy(error.message.Message, "cannot find recipe");
+
+        serializer_error(response_payload, &error, rpc_request->id);
+    }
+
+    sprintf(response_topic, "empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/response/%d", rpc_request->id);
+    iotseed_mqtt_publish_msg(config->nc, response_topic, response_payload, rpc_request->id, MG_MQTT_QOS(0));
+}
+
+// 工艺激活
+void fn_active_recipe(void *request, void *user_data)
+{
+    char response_payload[4096];
+    memset(response_payload, 0, sizeof(response_payload));
+
+    char response_topic[128];
+    memset(response_topic, 0, sizeof(response_topic));
+
+    JSONRPCRequest *rpc_request = (JSONRPCRequest *)request;
+    IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
+
+    IOTSEED_RPC_ACTIVE_RECIPE_PARAM param;
+    if(handler_active_recipe_params(&param, rpc_request->params) == SD_FAILURE)
+    {
+        // 激活失败，否定响应
+        IOTSEED_RPC_ERROR_MESSAGE error;
+        error.code = -100;
+        strcpy(error.message.Message, "active recipe failed");
+
+        serializer_error(response_payload, &error, rpc_request->id);
+    }
+    else
+    {
+        // 成功，肯定响应
+        IOTSEED_RPC_ACTIVE_RECIPE_RESULT result;
+        result.code = 0;
+        serializer_active_recipe_result(response_payload, &result, rpc_request->id);
+    }
+
+    sprintf(response_topic, "empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/response/%d", rpc_request->id);
+    iotseed_mqtt_publish_msg(config->nc, response_topic, response_payload, rpc_request->id, MG_MQTT_QOS(0));
+}
+
+// 处理rpc请求
+void handle_msg(const char *msg, ST_INT32 msg_len)
+{
+    JSONRPCRequest rpc_request;
+
+    char buf[4096];
+    memset(buf, 0, sizeof(buf));
+    memcpy(buf, msg, msg_len);
+
+    deserializer_jsonrpc_request(buf, &rpc_request);
+    dispatch_rpc_method(&rpc_request);
+
+    show_all_recipes();
+}
+
 static void ev_handler(void *nc, int ev, void *p,void* user_data) {
     struct iotseed_mg_mqtt_message *msg = (struct iotseed_mg_mqtt_message *) p;
     IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
     (void) nc;
 
-    if (ev != IOTSEED_MG_EV_POLL) printf("USER HANDLER GOT EVENT %d\n", ev);
+//    if (ev != IOTSEED_MG_EV_POLL) printf("USER HANDLER GOT EVENT %d\n", ev);
 
     switch (ev) {
         case IOTSEED_MG_EV_CONNECT: {
@@ -63,6 +153,8 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
 #else
             printf("Got incoming message %.*s: %.*s\n", (int) msg->topic.len,
                    msg->topic.p, (int) msg->payload.len, msg->payload.p);
+
+            handle_msg(msg->payload.p, (int) msg->payload.len);
 #endif
 //            mqtt_publish_msg(config->nc,"empoweriot/devices/123/rpc/requests","test",0);
 //            mg_mqtt_publish(nc, "empoweriot/devices/123/rpc/requests", 65, MG_MQTT_QOS(0), msg->payload.p,
@@ -75,6 +167,9 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
     }
 }
 
+
+
+
 static void signal_handler(int sig_num) {
     signal(sig_num, signal_handler);  // Reinstantiate signal handler
     end = 1;
@@ -86,9 +181,9 @@ void *worker_thread_proc(void *param) {
     while (!end) {
         char* msg = "demo data";
         if (iotseed_is_connected()){
-            iotseed_mqtt_publish_msg(config->nc, "empoweriot/devices/123/rpc/requests", msg, 16, MG_MQTT_QOS(0));
+//            iotseed_mqtt_publish_msg(config->nc, "123123123", msg, 16, MG_MQTT_QOS(0));
         }
-        iotseed_msSleep(500);
+        iotseed_msSleep(1000);
     }
     return NULL;
 }
@@ -96,11 +191,14 @@ void *worker_thread_proc(void *param) {
 
 
 int main(int argc, char **argv) {
+
+    init_device_recipes(CLIENT_ID);
+
     ST_RET ret;
 //    int msg_id = rand();
 
 //    char s_topic[256] = {0};
-    TOPIC sub_topics[2] = {"empoweriot/devices/123/rpc/request/+","empoweriot/devices/+/telemetry"};
+    TOPIC sub_topics[2] = {"empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/request/+"};
 
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
@@ -112,12 +210,14 @@ int main(int argc, char **argv) {
         }
     }
 
-
     IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_user_name, s_password,sub_topics,sizeof(sub_topics)/ sizeof(TOPIC));
     if (NULL == config){
         fprintf(stderr, "初始化mqtt配置失败\n");
         exit(1);
     }
+
+    registry_iotseed_recipe_rpc_method(RPC_METHOD_SETRECIPE, fn_set_recipe, config);
+    registry_iotseed_recipe_rpc_method(RPC_METHOD_ACTIVERECIPE, fn_active_recipe, config);
 
     ret = iotseed_create_mqtt_client(config);
 
@@ -140,9 +240,9 @@ int main(int argc, char **argv) {
     while (!end){
         //critical 必须先连接后才可以进行发布
         if (iotseed_is_connected()){
-            iotseed_mqtt_publish_msg(config->nc, "empoweriot/devices/123/rpc/requests", "demo data master process", 16, MG_MQTT_QOS(0));
+//            iotseed_mqtt_publish_msg(config->nc, "empower234sts", "demo data master process", 16, MG_MQTT_QOS(0));
         }
-        iotseed_msSleep(100);
+        iotseed_msSleep(1000);
     }
 
     iotseed_destory_mqtt_client(config);

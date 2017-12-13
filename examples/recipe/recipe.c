@@ -4,7 +4,6 @@
 
 
 #include "recipe.h"
-
 #include <unistd.h>
 
 #include <signal.h>
@@ -33,7 +32,7 @@ int main(){
 
     init_device_recipes(CLIENT_ID);
 
-    LOGGER *log = create_console_log("111",CLIENT_ID);
+    IOTSEED_LOGGER *log = iotseed_create_console_log("111",CLIENT_ID);
 
     for(int i=0; i < RECIPE_LEN; ++i){
         IOTSEED_RECIPE* r  = create_recipe();
@@ -42,7 +41,6 @@ int main(){
             create_recipe_param(r, "加速度", "m/s/s", &value, R_VAL_DOUBLE_T);
         }
     }
-
 
     active_recipe(1);
 
