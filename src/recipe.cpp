@@ -601,15 +601,11 @@ ST_RET serializer_error(char *raw_str, const IOTSEED_RPC_ERROR_MESSAGE *error, u
     return SD_SUCCESS;
 }
 
-ST_VOID show_all_recipes()
+ST_VOID show_all_recipes(ST_VOID)
 {
     json _j;
     g_DeviceRecipes->serialize(_j);
 
-    char buf[4096];
-    memset(buf, 0, sizeof(buf));
 
-    strncpy(buf, _j.dump().c_str(), strlen(_j.dump().c_str()));
-
-    std::cout<<"当前设备所有工艺：\n"<<buf<<std::endl;
+    std::cout<<"当前设备所有工艺：\n"<<std::setw(4) << _j <<std::endl;
 }

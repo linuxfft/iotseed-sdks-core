@@ -96,7 +96,7 @@ ST_RET registry_iotseed_recipe_rpc_method(IOTSEED_RPC_METHOD _method, iotseed_rp
 
 IOTSEED_RECIPE *iotseed_set_recipe(ST_INT32 *recipe_index, const void *params);
 
-ST_VOID show_all_recipes();
+ST_VOID show_all_recipes(ST_VOID);
 
 // 工艺下发请求参数(反序列化)
 IOTSEED_RECIPE *handler_set_recipe_params(IOTSEED_RPC_SET_RECIPE_PARAM *param, const char *raw_str);
@@ -112,8 +112,6 @@ ST_RET serializer_active_recipe_result(char *raw_str, const IOTSEED_RPC_ACTIVE_R
 
 // 工艺否定响应消息(序列化)
 ST_RET serializer_error(char *raw_str, const IOTSEED_RPC_ERROR_MESSAGE *error, unsigned int response_id);
-
-//ST_RET seriral_device_recipes(JSONRPCRequest *req);
 
 #ifdef __cplusplus
 }
