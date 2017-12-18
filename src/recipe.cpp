@@ -4,7 +4,7 @@
 
 #include "recipe.h"
 
-#include "time_utils.h"
+#include "mongoose.h"
 
 #include <iostream>
 
@@ -189,13 +189,13 @@ class DEVICE_RECIPES {
 public:
     string      ClientID;
     string      Type;
-    ST_INT32    ActivedGroup; //当前激活的参数组
+    ST_INT32    ActivedGroup;
     map<ST_INT32, _iotseed_recipe_class_t> Recipes;
 
     explicit DEVICE_RECIPES(string client_id){
         this->ClientID = client_id;
         this->ActivedGroup = 0;
-        this->Type = "recipe";// 类型为recipe或者log
+        this->Type = "recipe";
     }
 
     void serialize(json& j){
@@ -279,7 +279,7 @@ ST_VOID destroy_recipe(IOTSEED_RECIPE* recipe){
         return;
 #endif
     }
-    g_DeviceRecipes->Recipes.erase(recipe->Index); //从map中将此对象移除
+    g_DeviceRecipes->Recipes.erase(recipe->Index);
 }
 
 
@@ -306,9 +306,7 @@ ST_RET active_recipe(const ST_INT32 actived_group){
 
     g_DeviceRecipes->ActivedGroup = actived_group;
 
-    struct timeval tBegin;
-    gettimeofday(&tBegin, nullptr);
-    g_DeviceRecipes->Recipes[actived_group].to_c_recipe_struct_point()->LastActivedTimeStamp = (ST_INT32)tBegin.tv_sec;
+    g_DeviceRecipes->Recipes[actived_group].to_c_recipe_struct_point()->LastActivedTimeStamp = (ST_INT32)cs_time();
 
     return SD_SUCCESS;
 
@@ -335,7 +333,6 @@ IOTSEED_RECIPE *iotseed_set_recipe(ST_INT32 *recipe_index, const void *params)
         map<ST_INT32, _iotseed_recipe_class_t>::iterator it = g_DeviceRecipes->Recipes.find(index);
         if(it != g_DeviceRecipes->Recipes.end())
         {
-            // 工艺存在，修改
             _iotseed_recipe_class_t recipe = g_DeviceRecipes->Recipes.at(index);
             recipe.Params.clear();
 
@@ -371,13 +368,11 @@ IOTSEED_RECIPE *iotseed_set_recipe(ST_INT32 *recipe_index, const void *params)
         }
         else
         {
-            // 找不到工艺
             return NULL;
         }
     }
     else
     {
-        // 新建
         obj_recipe = create_recipe();
         for (json::iterator it_params = j_params->begin(); it_params != j_params->end(); ++it_params)
         {
@@ -455,7 +450,6 @@ ST_RET registry_iotseed_recipe_rpc_method(IOTSEED_RPC_METHOD _method, iotseed_rp
     }
 }
 
-// 工艺下发请求参数(反序列化)
 IOTSEED_RECIPE *handler_set_recipe_params(IOTSEED_RPC_SET_RECIPE_PARAM *param, const char *str_rpc_params)
 {
     assert(param && str_rpc_params);
@@ -468,7 +462,6 @@ IOTSEED_RECIPE *handler_set_recipe_params(IOTSEED_RPC_SET_RECIPE_PARAM *param, c
         return nullptr;
     }
 
-    // 遍历rpc参数
     for (json::iterator it = rpc_params.begin(); it != rpc_params.end(); ++it)
     {
         json j_set_recipe_params = (*it)["Recipes"];
@@ -477,7 +470,6 @@ IOTSEED_RECIPE *handler_set_recipe_params(IOTSEED_RPC_SET_RECIPE_PARAM *param, c
             continue;
         }
 
-        // 遍历工艺组
         ST_INT32 index_recipe = 0;
         for (json::iterator it_recipes = j_set_recipe_params.begin(); it_recipes != j_set_recipe_params.end(); ++it_recipes)
         {
@@ -523,7 +515,6 @@ IOTSEED_RECIPE *handler_set_recipe_params(IOTSEED_RPC_SET_RECIPE_PARAM *param, c
 //    insert_jsonrpc_param(req, "recipes",(void*)&_j,R_VAL_OBJECT_T );
 //}
 
-// 工艺下发肯定响应结果(序列化)
 ST_RET serializer_set_recipe_result(char *raw_str, const IOTSEED_RPC_SET_RECIPE_RESULT *result, unsigned int response_id)
 {
     json j;
@@ -546,7 +537,6 @@ ST_RET serializer_set_recipe_result(char *raw_str, const IOTSEED_RPC_SET_RECIPE_
     return SD_SUCCESS;
 }
 
-// 工艺激活请求参数(反序列化)
 ST_RET handler_active_recipe_params(IOTSEED_RPC_ACTIVE_RECIPE_PARAM *param, const char *raw_str)
 {
     json rpc_params = json::parse(raw_str);
@@ -560,7 +550,6 @@ ST_RET handler_active_recipe_params(IOTSEED_RPC_ACTIVE_RECIPE_PARAM *param, cons
     return active_recipe(param->Index);
 }
 
-// 工艺激活肯定响应结果(序列化)
 ST_RET serializer_active_recipe_result(char *raw_str, const IOTSEED_RPC_ACTIVE_RECIPE_RESULT *result, unsigned int response_id)
 {
     json j;
@@ -581,7 +570,6 @@ ST_RET serializer_active_recipe_result(char *raw_str, const IOTSEED_RPC_ACTIVE_R
     return SD_SUCCESS;
 }
 
-// 工艺否定响应消息(序列化)
 ST_RET serializer_error(char *raw_str, const IOTSEED_RPC_ERROR_MESSAGE *error, unsigned int response_id)
 {
     json _j;

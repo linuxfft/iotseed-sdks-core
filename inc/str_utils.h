@@ -15,11 +15,11 @@ extern "C" {
 
 #include "glbtypes.h"
 
-ST_BOOLEAN isAllWhitespace (const char *astr);
+IOTSEED_API ST_BOOLEAN isAllWhitespace (const char *astr);
 
-ST_VOID_PTR create_string(const size_t length, const char *sSrc);
+IOTSEED_API ST_VOID* create_string(const size_t length, const char *sSrc);
 
-ST_RET free_string(char **pString);
+IOTSEED_API ST_RET free_string(char **pString);
 
 #ifdef __cplusplus
 }

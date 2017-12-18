@@ -6,11 +6,15 @@
 
 #include "time_utils.h"
 
+#if !defined(_WIN32)
 #include <signal.h>
+#endif
+
 #include "recipe.h"
 
 
-static const char *s_address = "mqtt.hub.cloudahead.net:31883"; // mqtt broker by CloudAhead
+//static const char *s_address = "mqtt.hub.cloudahead.net:31883"; // mqtt broker by CloudAhead
+static const char *s_address = "180.175.136.183:31883";
 static const char *s_user_name = "cloudahead";
 static const char *s_password = "alano+1234567";
 
@@ -20,11 +24,11 @@ static char *s_device_id;
 
 static int end = 0;
 
-// 工艺下发
+// set_recipe
 void fn_set_recipe(void *request, void *user_data)
 {
-    char response_payload[4096];
-    memset(response_payload, 0, sizeof(response_payload));
+    char response_payload[10086];
+    memset(response_payload, 0, 10086);
 
     char response_topic[128];
     memset(response_topic, 0, sizeof(response_topic));
@@ -32,13 +36,13 @@ void fn_set_recipe(void *request, void *user_data)
     JSONRPCRequest *rpc_request = (JSONRPCRequest *)request;
     IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
 
-    // 解析工艺下发请求
+    // parse request
     IOTSEED_RPC_SET_RECIPE_PARAM param;
     IOTSEED_RECIPE *recipe = handler_set_recipe_params(&param, rpc_request->params);
 
     if(recipe)
     {
-        // 设置成功，返回肯定响应
+        // return ok
         IOTSEED_RPC_SET_RECIPE_RESULT result;
         result.code = 0;
         result.Recipes[0].Index = recipe->Index;
@@ -48,7 +52,7 @@ void fn_set_recipe(void *request, void *user_data)
     }
     else
     {
-        // 错误，否定响应
+        // return error
         IOTSEED_RPC_ERROR_MESSAGE error;
         error.code = -100;
         strcpy(error.message.Message, "cannot find recipe");
@@ -60,11 +64,11 @@ void fn_set_recipe(void *request, void *user_data)
     iotseed_mqtt_publish_msg(config->nc, response_topic, response_payload, rpc_request->id, MG_MQTT_QOS(0));
 }
 
-// 工艺激活
+// active recipe
 void fn_active_recipe(void *request, void *user_data)
 {
-    char response_payload[4096];
-    memset(response_payload, 0, sizeof(response_payload));
+    char response_payload[10086];
+    memset(response_payload, 0, 10086);
 
     char response_topic[128];
     memset(response_topic, 0, sizeof(response_topic));
@@ -75,7 +79,7 @@ void fn_active_recipe(void *request, void *user_data)
     IOTSEED_RPC_ACTIVE_RECIPE_PARAM param;
     if(handler_active_recipe_params(&param, rpc_request->params) == SD_FAILURE)
     {
-        // 激活失败，否定响应
+        // return error
         IOTSEED_RPC_ERROR_MESSAGE error;
         error.code = -100;
         strcpy(error.message.Message, "active recipe failed");
@@ -84,7 +88,7 @@ void fn_active_recipe(void *request, void *user_data)
     }
     else
     {
-        // 成功，肯定响应
+        // return ok
         IOTSEED_RPC_ACTIVE_RECIPE_RESULT result;
         result.code = 0;
         serializer_active_recipe_result(response_payload, &result, rpc_request->id);
@@ -94,16 +98,17 @@ void fn_active_recipe(void *request, void *user_data)
     iotseed_mqtt_publish_msg(config->nc, response_topic, response_payload, rpc_request->id, MG_MQTT_QOS(0));
 }
 
-// 处理rpc请求
+// handle rpc request
 void handle_msg(const char *msg, ST_INT32 msg_len)
 {
     JSONRPCRequest rpc_request;
 
-    char buf[4096];
+    char buf[10086];
     memset(buf, 0, sizeof(buf));
     memcpy(buf, msg, msg_len);
 
     deserializer_jsonrpc_request(buf, &rpc_request);
+
     dispatch_rpc_method(&rpc_request);
 
     show_all_recipes();
@@ -169,11 +174,12 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
 
 
 
-
+#if !defined(_WIN32)
 static void signal_handler(int sig_num) {
     signal(sig_num, signal_handler);  // Reinstantiate signal handler
     end = 1;
 }
+#endif
 
 void *worker_thread_proc(void *param) {
     IOSSEED_MQTT_CONFIG *config = (IOSSEED_MQTT_CONFIG *) param;
@@ -200,8 +206,10 @@ int main(int argc, char **argv) {
 //    char s_topic[256] = {0};
     TOPIC sub_topics[2] = {"empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/request/+"};
 
+#if !defined(_WIN32)
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
+#endif
 
     /* Parse command line arguments */
     for (int i = 1; i < argc; i++) {
@@ -212,7 +220,7 @@ int main(int argc, char **argv) {
 
     IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_user_name, s_password,sub_topics,sizeof(sub_topics)/ sizeof(TOPIC));
     if (NULL == config){
-        fprintf(stderr, "初始化mqtt配置失败\n");
+        fprintf(stderr, "init mqtt config failed\n");
         exit(1);
     }
 
@@ -222,14 +230,14 @@ int main(int argc, char **argv) {
     ret = iotseed_create_mqtt_client(config);
 
     if(ret != SD_SUCCESS){
-        fprintf(stderr, "创建mqtt客户端失败\n");
+        fprintf(stderr, "create mqtt client failed\n");
         exit(1);
     }
 
     ret = iotseed_mqtt_connect(config, ev_handler);
 
     if(ret != SD_SUCCESS){
-        fprintf(stderr, "连接mqtt broker失败\n");
+        fprintf(stderr, "connect failed\n");
         exit(1);
     }
 
@@ -238,7 +246,7 @@ int main(int argc, char **argv) {
 
 
     while (!end){
-        //critical 必须先连接后才可以进行发布
+        //critical 
         if (iotseed_is_connected()){
 //            iotseed_mqtt_publish_msg(config->nc, "empower234sts", "demo data master process", 16, MG_MQTT_QOS(0));
         }

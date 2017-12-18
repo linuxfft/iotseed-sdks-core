@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.8)
+project(recipe)
+set(INCLUDE_DIRECTORIES ../../inc)
+include_directories(${INCLUDE_DIRECTORIES})
+set (LINK_DIR ../../cmake-build-debug/Debug)
+link_directories(${LINK_DIR})
+add_definitions(-DMG_ENABLE_CALLBACK_USERDATA -DMG_ENABLE_HTTP=0 -DMG_ENABLE_SSL -DMG_ENABLE_THREADS)
+set(SOURCE_FILES recipe.c)
+
+add_executable(recipe ${SOURCE_FILES})
+target_link_libraries(recipe iotseed_sdks_core)

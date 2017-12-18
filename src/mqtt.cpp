@@ -11,7 +11,7 @@
 
 struct mg_mgr* g_pMqttManager = nullptr;
 
-static std::atomic<bool> end(false); //原子标示符
+static std::atomic<bool> end(false); //atomic flag
 
 static std::atomic<bool> connected(false);
 
@@ -76,11 +76,11 @@ ST_RET destory_mqtt_config(IOSSEED_MQTT_CONFIG** config){
 IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username, const char *s_password,
                                               const TOPIC *s_topics, const int topics_size){
     if(nullptr == s_address || isAllWhitespace(s_address)){
-        fprintf(stderr, "MQTT Broker地址为必填参数\n");
+        fprintf(stderr, "MQTT Broker address is required\n");
         exit(1);
     }
     if(strlen(s_address) > ADDRESS_MAX_LEN || strlen(s_username) > USENAME_MAX_LEN || strlen(s_password) > PWD_MAX_LEN || topics_size > TOPICS_MAX_NUM){
-        fprintf(stderr, "请检查参数是否长度超限\n");
+        fprintf(stderr, "please check the string length\n");
         exit(1);
     }
 
@@ -183,7 +183,7 @@ ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config){
     }
     ST_RET ret = create_global_manager();
     if (ret < 0) {
-        printf("创建全局消息管理者失败\n");
+        printf("create global mgr manager fail\n");
         return ret;
     }
 
@@ -209,7 +209,7 @@ ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handle
 
 static ST_RET mqtt_wait_disconnect(void){
 
-    end.exchange(true); //设定标签为true;
+    end.exchange(true); //set the global END flag is true
 
     if(nullptr != g_ThreadPool){
         g_ThreadPool->join();
@@ -228,13 +228,13 @@ IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *p){
 
 /*!
  *
- * @param config mqtt 配置结构体指针
+ * @param config mqtt config the mqtt pointer
  * @return
  */
 ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
 
     if(nullptr != config->nc){
-        mg_mqtt_disconnect((struct mg_connection*)(config->nc)); // 尝试发送断开连接的请求
+        mg_mqtt_disconnect((struct mg_connection*)(config->nc)); //try to send the DISCONNECT REQ
     }
 
     mqtt_wait_disconnect();
@@ -246,7 +246,7 @@ ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
     ST_RET ret = destroy_global_manager();
     if (ret != SD_SUCCESS) {
 #ifdef IOTSEED_DEBUG
-        fprintf(stderr,"清除全局消息管理者失败\n");
+        fprintf(stderr,"clear the global mgr manager fail\n");
 #endif
         return ret;
     }
@@ -254,13 +254,13 @@ ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
 }
 
 
-//非线程安全
+//no thread safe
 ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos){
     struct mg_connection * _nc = (struct mg_connection *)nc;
     if(nullptr == _nc)
         return SD_FAILURE;
     mg_mqtt_publish(_nc, topic, (uint16_t)msg_id, MG_MQTT_QOS(qos), msg,
-                    strlen(msg));//不能将\0增加到payload中
+                    strlen(msg));//cannot add the \0 to the payload
 
     return SD_SUCCESS;
 }
@@ -270,7 +270,7 @@ ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id,
     struct mg_mqtt_topic_expression s_topic_expr = {topic, (uint8_t)qos};
 
     if(nullptr == nc || nullptr == topic){
-        fprintf(stderr,"mqtt订阅失败\n");
+        fprintf(stderr,"mqtt Subscribing fail\n");
         return SD_FAILURE;
     }
 

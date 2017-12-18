@@ -13,7 +13,7 @@ extern "C" {
 #include "sysinc.h"
 #include "glbtypes.h"
 
-extern ST_RET judge_is_log2(const int n);
+IOTSEED_API ST_RET judge_is_log2(const int n);
 
 #ifdef __cplusplus
 }

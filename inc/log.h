@@ -37,7 +37,7 @@ extern "C" {
 
 #ifndef IOTSEED_LOG_PATTERN_DEFAULT
 //#define LOG_PATTERN_DEFAULT "*** [%H:%M:%S %z] [%l] [thread %t] %v ***"
-#define IOTSEED_LOG_PATTERN_DEFAULT "%v" //只保存msg信息
+#define IOTSEED_LOG_PATTERN_DEFAULT "%v"
 #endif
 
 
@@ -75,33 +75,27 @@ typedef struct _iotseed_struct_log_config_t {
 
 
 typedef struct _iotseed_struct_logger_t {
-    ST_VOID_PTR             spd_logger;
+    ST_VOID					*spd_logger;
     IOTSEED_LOG_CONFIG      *config;
 }IOTSEED_LOGGER;
 
-IOTSEED_LOGGER* iotseed_create_rotated_log(const char *name, const char *clientID, const char *path, const size_t file_size_bit, const size_t file_num);
+IOTSEED_API IOTSEED_LOGGER* iotseed_create_rotated_log(const char *name, const char *clientID, const char *path, const size_t file_size_bit, const size_t file_num);
 
-IOTSEED_LOGGER* iotseed_create_console_log(const char* name, const char *clientID);
+IOTSEED_API IOTSEED_LOGGER* iotseed_create_console_log(const char* name, const char *clientID);
 
-IOTSEED_LOGGER* iotseed_create_daily_log(const char *name, const char *clientID, const char *path, const int hour, const int minute);
+IOTSEED_API IOTSEED_LOGGER* iotseed_create_daily_log(const char *name, const char *clientID, const char *path, const int hour, const int minute);
 
-ST_VOID iotseed_destroy_logger(IOTSEED_LOGGER **log);
+IOTSEED_API ST_VOID iotseed_destroy_logger(IOTSEED_LOGGER **log);
 
-ST_VOID iotseed_write_log(const IOTSEED_LOGGER* logger, IOTSEED_LOG_LEVEL level, const char* msg, IOTSEED_LOG_TYPE type);
+IOTSEED_API ST_VOID iotseed_write_log(const IOTSEED_LOGGER* logger, IOTSEED_LOG_LEVEL level, const char* msg, IOTSEED_LOG_TYPE type);
 
-ST_RET iotseed_set_log_format(IOTSEED_LOGGER* pLogger, const char* format);
+IOTSEED_API ST_RET iotseed_set_log_format(IOTSEED_LOGGER* pLogger, const char* format);
 
-/*!
- * 通过设定日志等级，设定刷新。当日志写入等级高于设定等级时候，刷新缓存区
- * @param pLogger IOTSEED_LOGGER日志指针
- * @param level 日志等级
- * @return
- */
-ST_RET iotseed_set_log_level(IOTSEED_LOGGER* pLogger, const IOTSEED_LOG_LEVEL level);
+IOTSEED_API ST_RET iotseed_set_log_level(IOTSEED_LOGGER* pLogger, const IOTSEED_LOG_LEVEL level);
 
-ST_RET iotseed_log_async_mode(const size_t buf_size, const ST_UINT32 seconds);
+IOTSEED_API ST_RET iotseed_log_async_mode(const size_t buf_size, const ST_UINT32 seconds);
 
-ST_RET iotseed_log_sync_mode(ST_VOID);
+IOTSEED_API ST_RET iotseed_log_sync_mode(ST_VOID);
 
 
 

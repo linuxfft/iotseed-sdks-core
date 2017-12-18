@@ -9,8 +9,8 @@
 #define SD_FALSE	0
 #define SD_SUCCESS 	0
 #define SD_FAILURE 	1
-#define SD_BIG_ENDIAN		0 //大端
-#define SD_LITTLE_ENDIAN	1 //小端
+#define SD_BIG_ENDIAN		0 //big endian
+#define SD_LITTLE_ENDIAN	1 //little endian
 
 
 
@@ -25,7 +25,6 @@
 #define ST_UINT    unsigned int
 #define ST_ULONG   unsigned long
 #define ST_VOID    void
-#define ST_VOID_PTR ST_VOID*
 #define ST_DOUBLE  double
 #define ST_FLOAT   float
 

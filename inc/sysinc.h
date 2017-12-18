@@ -7,18 +7,13 @@
 
 
 #ifndef IOTSEED_SDK_VERSION
-#define IOTSEED_SDK_VERSION "0.1"
-#endif
-
-
-#ifndef GET_VERSION
-#define GET_VERSION()   IOTSEED_SDK_VERSION
-#define get_version()   IOTSEED_SDK_VERSION
+#define IOTSEED_SDK_VERSION "0.0.1"
 #endif
 
 #if defined (_WIN32)
 #if !defined (_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
+#define IOTSEED_API _declspec(dllexport)
 #endif
 #if !defined(__GNUC__)
 #pragma warning(disable : 4996)
@@ -28,10 +23,12 @@
 #include <windows.h>
 #include <process.h>		/* for _beginthread, _endthread	*/
 #include <sys/timeb.h>		/* for ftime, timeb		*/
+
+#else
+#define IOTSEED_API
 #endif
 
 
-//统一导入的头文件
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

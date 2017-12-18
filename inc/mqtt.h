@@ -107,45 +107,45 @@ struct iotseed_mg_mqtt_message {
 };
 
 
-IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username,
+IOTSEED_API IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username,
                                                      const char *s_password, const TOPIC *s_topics,
                                                      const int topics_size);
 
 
 // client
-ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config);
+IOTSEED_API ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config);
 
-ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config);
+IOTSEED_API ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config);
 
 
-//连接相关
-ST_RET iotseed_set_connected(void);
+//connect
+IOTSEED_API ST_RET iotseed_set_connected(void);
 
-ST_RET iotseed_is_connected(void);
+IOTSEED_API ST_RET iotseed_is_connected(void);
 
 /*!
  *
  * @param config
- * @param handler 回调句柄
- * @return SD_SUCCESS: 成功
- *         SD_FAILURE: 失败
+ * @param handler handler 
+ * @return SD_SUCCESS: success
+ *         SD_FAILURE: fail
  */
-ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler);
+IOTSEED_API ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler);
 
-ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
+IOTSEED_API ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
 
-ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
+IOTSEED_API ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
                                                   struct iotseed_mg_send_mqtt_handshake_opts* opts);
 
 
 
-//线程
-IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *p);
+//thread
+IOTSEED_API IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *p);
 
-//发布订阅
-ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos);
+//publish subscribe
+IOTSEED_API ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos);
 
-ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos);
+IOTSEED_API ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos);
 
 
 #ifdef __cplusplus

@@ -28,9 +28,9 @@ ST_BOOLEAN isAllWhitespace (const char *astr)
     return bRet;
 }
 
-ST_VOID_PTR create_string(const size_t length , const char *sSrc)
+ST_VOID* create_string(const size_t length , const char *sSrc)
 {
-    ST_VOID_PTR pRet = calloc(1, length);
+    ST_VOID* pRet = calloc(1, length);
 
     memcpy(pRet, sSrc, length);
 
