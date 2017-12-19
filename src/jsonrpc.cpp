@@ -11,7 +11,6 @@
 #include <list>
 #include <ostream>
 
-#include "glbtypes.h"
 #include "json/json.hpp"
 
 
