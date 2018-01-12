@@ -191,6 +191,28 @@ ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config){
 }
 
 
+ST_RET iotseed_mqtt_connect_ssl(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler, const char* ca_cert, const char* cert, const char* key)
+{
+    struct mg_connect_opts opts;
+    memset(&opts, 0, sizeof(opts));
+    opts.ssl_cert = (cert != NULL && strlen(cert) > 0 ? cert : NULL);
+    opts.ssl_key = (key != NULL && strlen(key) > 0 ? key : NULL);
+    opts.ssl_ca_cert = (ca_cert != NULL && strlen(ca_cert) > 0 ? ca_cert : NULL);
+
+    if ((config->nc = (void *)mg_connect_opt(g_pMqttManager, config->s_address, (mg_event_handler_t)handler, (void*)config,opts)) == nullptr) {
+        fprintf(stderr, "mg_connect(%s) failed\n", config->s_address);
+        return SD_FAILURE;
+    }
+
+    if(nullptr == g_ThreadPool){
+        g_ThreadPool = new std::thread(thread_task);
+
+    }
+
+    return SD_SUCCESS;
+}
+
+
 ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler)
 {
     if ((config->nc = (void *)mg_connect(g_pMqttManager, config->s_address, (mg_event_handler_t)handler, (void*)config)) == nullptr) {

@@ -17,3 +17,4 @@ examples/jsonrpc/jsonrpc
 *.so
 *.log
 *.cbp
+*.pem

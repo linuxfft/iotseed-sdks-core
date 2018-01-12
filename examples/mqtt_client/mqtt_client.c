@@ -13,8 +13,13 @@
 #include "recipe.h"
 
 
-//static const char *s_address = "mqtt.hub.cloudahead.net:31883"; // mqtt broker by CloudAhead
-static const char *s_address = "180.175.136.183:31883";
+static const char *rootCAPath = "./mqtt-ca-server.pem";
+static const char *privateKeyPath = "mqtt-client1-key.pem";
+static const char *certificatePath = "./mqtt-client1.pem";
+
+
+static const char *s_address = "mqtt.hub.cloudahead.net:38883"; // mqtt broker by CloudAhead
+//static const char *s_address = "180.175.136.183:31883";
 static const char *s_user_name = "cloudahead";
 static const char *s_password = "alano+1234567";
 
@@ -101,6 +106,7 @@ void fn_active_recipe(void *request, void *user_data)
 // handle rpc request
 void handle_msg(const char *msg, ST_INT32 msg_len)
 {
+
     JSONRPCRequest rpc_request;
 
     char buf[10086];
@@ -159,7 +165,10 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
             printf("Got incoming message %.*s: %.*s\n", (int) msg->topic.len,
                    msg->topic.p, (int) msg->payload.len, msg->payload.p);
 
+#ifdef RPC_TEST
             handle_msg(msg->payload.p, (int) msg->payload.len);
+#endif
+
 #endif
 //            mqtt_publish_msg(config->nc,"empoweriot/devices/123/rpc/requests","test",0);
 //            mg_mqtt_publish(nc, "empoweriot/devices/123/rpc/requests", 65, MG_MQTT_QOS(0), msg->payload.p,
@@ -187,7 +196,7 @@ void *worker_thread_proc(void *param) {
     while (!end) {
         char* msg = "demo data";
         if (iotseed_is_connected()){
-//            iotseed_mqtt_publish_msg(config->nc, "123123123", msg, 16, MG_MQTT_QOS(0));
+            iotseed_mqtt_publish_msg(config->nc, "test/echo", msg, 16, MG_MQTT_QOS(0));
         }
         iotseed_msSleep(1000);
     }
@@ -204,7 +213,7 @@ int main(int argc, char **argv) {
 //    int msg_id = rand();
 
 //    char s_topic[256] = {0};
-    TOPIC sub_topics[2] = {"empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/request/+"};
+    TOPIC sub_topics[2] = {"empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/request/+","test/echo"};
 
 #if !defined(_WIN32)
     signal(SIGTERM, signal_handler);
@@ -234,7 +243,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    ret = iotseed_mqtt_connect(config, ev_handler);
+    ret = iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath);
 
     if(ret != SD_SUCCESS){
         fprintf(stderr, "connect failed\n");

@@ -132,6 +132,8 @@ IOTSEED_API ST_RET iotseed_is_connected(void);
  */
 IOTSEED_API ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler);
 
+IOTSEED_API ST_RET iotseed_mqtt_connect_ssl(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler, const char* ca_cert, const char* cert, const char* key);
+
 IOTSEED_API ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
 
 IOTSEED_API ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
