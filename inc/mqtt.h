@@ -23,16 +23,16 @@ extern "C" {
 #define IOTSEED_MG_EV_MQTT_PUBLISH      MG_EV_MQTT_PUBLISH
 #define IOTSEED_MG_EV_CLOSE             MG_EV_CLOSE
 
-#ifndef USENAME_MAX_LEN
-#define USENAME_MAX_LEN 63
+#ifndef DEVICEID_MAX_LEN
+#define DEVICEID_MAX_LEN 63
 #endif
 
 #ifndef ADDRESS_MAX_LEN
 #define ADDRESS_MAX_LEN 63
 #endif
 
-#ifndef PWD_MAX_LEN
-#define PWD_MAX_LEN    63
+#ifndef ACCESSTOKEN_MAX_LEN
+#define ACCESSTOKEN_MAX_LEN    63
 #endif
 
 #ifndef MG_MQTT_QOS
@@ -62,8 +62,8 @@ typedef  void* IOTSEED_THREAD_ID;
 
 typedef struct _mqtt_config_struct_t {
     char    s_address[ADDRESS_MAX_LEN + 1];
-    char    s_username[USENAME_MAX_LEN + 1];
-    char    s_password[PWD_MAX_LEN + 1];
+    char    sDeviceId[DEVICEID_MAX_LEN + 1];
+    char    sAccessToken[ACCESSTOKEN_MAX_LEN + 1];
     TOPIC   sub_topics[TOPICS_MAX_NUM];
     int     topics_size;
     void    * nc;
@@ -74,8 +74,8 @@ struct iotseed_mg_send_mqtt_handshake_opts {
     uint16_t keep_alive;
     const char *will_topic;
     const char *will_message;
-    const char *user_name;
-    const char *password;
+    const char *device_id;
+    const char *access_token;
 };
 
 
@@ -107,9 +107,8 @@ struct iotseed_mg_mqtt_message {
 };
 
 
-IOTSEED_API IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username,
-                                                     const char *s_password, const TOPIC *s_topics,
-                                                     const int topics_size);
+IOTSEED_API IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *sDeviceId, const char *sAccessToken,
+                                                          const TOPIC *s_topics, const int topics_size);
 
 
 // client

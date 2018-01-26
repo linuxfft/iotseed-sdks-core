@@ -20,12 +20,12 @@ static const char *certificatePath = "./mqtt-client1.pem";
 
 static const char *s_address = "mqtt.hub.cloudahead.net:38883"; // mqtt broker by CloudAhead
 //static const char *s_address = "180.175.136.183:31883";
-static const char *s_user_name = "cloudahead";
-static const char *s_password = "alano+1234567";
+static const char *sDeviceId = "deviceid";
+static const char *sAccessToken = "accesstoken";
 
-const char *CLIENT_ID = "23f901e0-ccc3-11e7-bf1a-59e9355b22c6";
+static char *s_device_id = NULL;
 
-static char *s_device_id;
+static char *s_token = NULL;
 
 static int end = 0;
 
@@ -131,8 +131,8 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
         case IOTSEED_MG_EV_CONNECT: {
             struct iotseed_mg_send_mqtt_handshake_opts opts;
             memset(&opts, 0, sizeof(opts));
-            opts.user_name = config->s_username;
-            opts.password = config->s_password;
+            opts.device_id = config->sDeviceId;
+            opts.access_token = config->sAccessToken;
 
             iotseed_mg_set_protocol_mqtt(nc);
             iotseed_mg_send_mqtt_handshake_opt(nc, "iotseed", &opts);
@@ -207,7 +207,7 @@ void *worker_thread_proc(void *param) {
 
 int main(int argc, char **argv) {
 
-    init_device_recipes(CLIENT_ID);
+    init_device_recipes(sDeviceId); //传入的是设备id
 
     ST_RET ret;
 //    int msg_id = rand();
@@ -225,9 +225,20 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "-d") == 0) {
             s_device_id = argv[++i];
         }
+        if (strcmp(argv[i], "-a") == 0) {
+            s_token = argv[++i];
+        }
     }
 
-    IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_user_name, s_password,sub_topics,sizeof(sub_topics)/ sizeof(TOPIC));
+    if (s_device_id == NULL){
+        s_device_id = sDeviceId;
+    }
+
+    if (s_token == NULL){
+        s_token = sAccessToken;
+    }
+
+    IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_device_id, s_token,sub_topics,sizeof(sub_topics)/ sizeof(TOPIC));
     if (NULL == config){
         fprintf(stderr, "init mqtt config failed\n");
         exit(1);

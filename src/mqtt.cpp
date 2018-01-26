@@ -73,13 +73,13 @@ ST_RET destory_mqtt_config(IOSSEED_MQTT_CONFIG** config){
 }
 
 
-IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *s_username, const char *s_password,
+IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char *sDeviceId, const char *sAccessToken,
                                               const TOPIC *s_topics, const int topics_size){
     if(nullptr == s_address || isAllWhitespace(s_address)){
         fprintf(stderr, "MQTT Broker address is required\n");
         exit(1);
     }
-    if(strlen(s_address) > ADDRESS_MAX_LEN || strlen(s_username) > USENAME_MAX_LEN || strlen(s_password) > PWD_MAX_LEN || topics_size > TOPICS_MAX_NUM){
+    if(strlen(s_address) > ADDRESS_MAX_LEN || strlen(sDeviceId) > DEVICEID_MAX_LEN || strlen(sAccessToken) > ACCESSTOKEN_MAX_LEN || topics_size > TOPICS_MAX_NUM){
         fprintf(stderr, "please check the string length\n");
         exit(1);
     }
@@ -88,13 +88,13 @@ IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char 
 
     strncpy(config->s_address, s_address, strlen(s_address) + 1);
 
-    if(nullptr != s_username && !isAllWhitespace(s_username)){
-        strncpy(config->s_username, s_username, strlen(s_username) + 1);
+    if(nullptr != sDeviceId && !isAllWhitespace(sDeviceId)){
+        strncpy(config->sDeviceId, sDeviceId, strlen(sDeviceId) + 1);
     }
 
 
-    if(nullptr != s_password && !isAllWhitespace(s_password)){
-        strncpy(config->s_password, s_password, strlen(s_password) + 1);
+    if(nullptr != sAccessToken && !isAllWhitespace(sAccessToken)){
+        strncpy(config->sAccessToken, sAccessToken, strlen(sAccessToken) + 1);
     }
 
     for(int i=0 ; i < topics_size; ++i){
@@ -108,7 +108,7 @@ IOSSEED_MQTT_CONFIG* iotseed_init_mqtt_config(const char *s_address, const char 
 }
 
 
-static void ev_handler(struct mg_connection *nc, int ev, void *p, void* user_data) {
+static void iotseed_ev_handler(struct mg_connection *nc, int ev, void *p, void* user_data) {
     struct mg_mqtt_message *msg = (struct mg_mqtt_message *) p;
     IOSSEED_MQTT_CONFIG* config = (IOSSEED_MQTT_CONFIG*)user_data;
     (void) nc;
@@ -119,8 +119,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *p, void* user_dat
         case MG_EV_CONNECT: {
             struct mg_send_mqtt_handshake_opts opts;
             memset(&opts, 0, sizeof(opts));
-            opts.user_name = config->s_username;
-            opts.password = config->s_password;
+            opts.user_name = config->sDeviceId;
+            opts.password = config->sAccessToken;
 
             mg_set_protocol_mqtt(nc);
             mg_send_mqtt_handshake_opt(nc, "iotseed", opts);
