@@ -176,7 +176,7 @@ ST_VOID serializer_jsonrpc_response(const JSONRPCResponse* res, ST_CHAR* cRet, S
 //    _j.erase("result");
 
     _j["id"] = res->id;
-    _j["jsonrpc"] = "2.0";
+    _j["jsonrpc"] = JSONRPC_VERSION;
 
     if(res->type == RPC_RESP_P)
     {
@@ -331,10 +331,10 @@ ST_RET get_jsonrpc_param(const ST_CHAR *params,const ST_UINT32 index, char *name
                 *(ST_DOUBLE*)value = it.value();
                 break;
             case R_VAL_BOOLEAN_T:
-                *(ST_BOOLEAN*)value = it.value().get<bool>()? SD_TRUE : SD_FALSE;
+                *(ST_BOOLEAN*)value = it.value().at(it.key()).get<bool>()? (ST_BOOLEAN)SD_TRUE : (ST_BOOLEAN)SD_FALSE;
                 break;
             case R_VAL_STRING_T:
-                strncpy((char*)value, it.value().get<std::string>().c_str(),strlen(it.value().get<std::string>().c_str()) + 1);
+                strncpy((char*)value, it.value().at(it.key()).get<std::string>().c_str(),strlen(it.value().at(it.key()).get<std::string>().c_str()) + 1);
                 break;
             default:
 #ifdef IOTSEED_DEBUG
