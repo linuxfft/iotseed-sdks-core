@@ -27,7 +27,7 @@ static char *s_device_id = NULL;
 
 static char *s_token = NULL;
 
-static int end = 0;
+static volatile int end = 0;
 
 // set_recipe
 void fn_set_recipe(void *request, void *user_data)
@@ -156,7 +156,7 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
         case IOTSEED_MG_EV_MQTT_SUBACK:
             printf("Subscription acknowledged, forwarding to '/test'\n");
             break;
-        case MG_EV_MQTT_PUBLISH: {
+        case IOTSEED_MG_EV_MQTT_PUBLISH: {
 #if 0
             char hex[1024] = {0};
         mg_hexdump(nc->recv_mbuf.buf, msg->payload.len, hex, sizeof(hex));
@@ -177,7 +177,14 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
         }
         case IOTSEED_MG_EV_CLOSE:
             printf("Connection closed\n");
-            exit(1);
+            if(!end){
+                iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath); //重新连接
+            }
+        case IOTSEED_MG_EV_MQTT_DISCONNECT:
+            printf("Disconnect from Broker\n");
+            if(!end){
+                iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath); //重新连接
+            }
     }
 }
 
@@ -240,7 +247,7 @@ int main(int argc, char **argv) {
 
     IOSSEED_MQTT_CONFIG* config = iotseed_init_mqtt_config(s_address, s_device_id, s_token,sub_topics,sizeof(sub_topics)/ sizeof(TOPIC));
     if (NULL == config){
-        fprintf(stderr, "init mqtt config failed\n");
+        fprintf(stderr, "initial mqtt config failed\n");
         exit(1);
     }
 

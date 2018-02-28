@@ -4,6 +4,7 @@
 
 #include "mqtt.h"
 #include "str_utils.h"
+#include "time_utils.h"
 
 #include <atomic>
 #include <thread>
@@ -172,6 +173,11 @@ ST_RET iotseed_set_connected(void){
     return SD_SUCCESS;
 }
 
+ST_RET iotseed_set_disconnected(void){
+    connected.exchange(false);
+    return SD_SUCCESS;
+}
+
 ST_RET iotseed_is_connected(void){
     return connected.load();
 }
@@ -232,6 +238,11 @@ ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handle
 static ST_RET mqtt_wait_disconnect(void){
 
     end.exchange(true); //set the global END flag is true
+
+    //等待连接断开
+    while(iotseed_is_connected() == true){
+        iotseed_msSleep(1000);
+    }
 
     if(nullptr != g_ThreadPool){
         g_ThreadPool->join();

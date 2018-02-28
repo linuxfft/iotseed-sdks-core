@@ -21,6 +21,7 @@ extern "C" {
 #define IOTSEED_MG_EV_MQTT_PUBACK       MG_EV_MQTT_PUBACK
 #define IOTSEED_MG_EV_MQTT_SUBACK       MG_EV_MQTT_SUBACK
 #define IOTSEED_MG_EV_MQTT_PUBLISH      MG_EV_MQTT_PUBLISH
+#define IOTSEED_MG_EV_MQTT_DISCONNECT   MG_EV_MQTT_DISCONNECT
 #define IOTSEED_MG_EV_CLOSE             MG_EV_CLOSE
 
 #ifndef DEVICEID_MAX_LEN
@@ -119,6 +120,8 @@ IOTSEED_API ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config);
 
 //connect
 IOTSEED_API ST_RET iotseed_set_connected(void);
+
+IOTSEED_API ST_RET iotseed_set_disconnected(void);
 
 IOTSEED_API ST_RET iotseed_is_connected(void);
 
