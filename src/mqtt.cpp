@@ -235,13 +235,17 @@ ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handle
 }
 
 
-static ST_RET mqtt_wait_disconnect(void){
+static ST_RET mqtt_wait_disconnect(IOSSEED_MQTT_CONFIG *config){
 
     end.exchange(true); //set the global END flag is true
 
+    if(nullptr != config->nc){
+        mg_mqtt_disconnect((struct mg_connection*)(config->nc)); //try to send the DISCONNECT REQ
+    }
+
     //等待连接断开
     while(iotseed_is_connected() == true){
-        iotseed_msSleep(1000);
+        iotseed_msSleep(100);
     }
 
     if(nullptr != g_ThreadPool){
@@ -266,11 +270,7 @@ IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *p){
  */
 ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
 
-    if(nullptr != config->nc){
-        mg_mqtt_disconnect((struct mg_connection*)(config->nc)); //try to send the DISCONNECT REQ
-    }
-
-    mqtt_wait_disconnect();
+    mqtt_wait_disconnect(config);
 
     if(nullptr != config){
         destory_mqtt_config(&config);

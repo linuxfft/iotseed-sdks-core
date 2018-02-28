@@ -179,11 +179,15 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
             printf("Connection closed\n");
             if(!end){
                 iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath); //重新连接
+            } else {
+                iotseed_set_disconnected(); //critical 必须设定为连接断开否则无法正常退出
             }
         case IOTSEED_MG_EV_MQTT_DISCONNECT:
             printf("Disconnect from Broker\n");
             if(!end){
                 iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath); //重新连接
+            } else {
+                iotseed_set_disconnected(); // critical 必须设定为连接断开否则无法正常退出
             }
     }
 }
