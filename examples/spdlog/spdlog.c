@@ -9,6 +9,8 @@
 #include <signal.h>
 #endif
 
+#include "time_utils.h"
+
 static int end = 0;
 
 const char *CLIENT_ID = "23f901e0-ccc3-11e7-bf1a-59e9355b22c6";
@@ -44,11 +46,7 @@ int main(){
         iotseed_write_log(log2,Info, "2222", Recipe);
         iotseed_write_log(log3,Info, "333", Log);
 
-#if !defined(_WIN32)
-        sleep(1);
-#else
-		Sleep(1000);
-#endif
+        iotseed_msSleep(1000);
     }
 
     iotseed_destroy_logger(&log);

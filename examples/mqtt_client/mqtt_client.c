@@ -135,7 +135,7 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
             opts.access_token = config->sAccessToken;
 
             iotseed_mg_set_protocol_mqtt(nc);
-            iotseed_mg_send_mqtt_handshake_opt(nc, "iotseed", &opts);
+            iotseed_mg_send_mqtt_handshake_opt(nc, "iotseed", &opts);// 第二个参数为clientid, 请自行进行修改. 如clientid相同，将发生无法同时连接的问题.
             break;
         }
         case IOTSEED_MG_EV_MQTT_CONNACK:

@@ -5,6 +5,7 @@
 #include "mqtt.h"
 #include "str_utils.h"
 #include "time_utils.h"
+#include "uuid/uuid.h"
 
 #include <atomic>
 #include <thread>
@@ -57,7 +58,19 @@ ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
     struct mg_connection * _nc = (struct mg_connection *)nc;
     struct mg_send_mqtt_handshake_opts _opts = *(struct mg_send_mqtt_handshake_opts*)opts;
 
-    mg_send_mqtt_handshake_opt(_nc,client_id,_opts);
+    char _random_clientID[36];
+
+    if (nullptr == client_id){
+        uuid_t uuid = {0};
+
+        uuid_generate_time_safe(uuid);
+        uuid_unparse_lower(uuid, _random_clientID);
+        mg_send_mqtt_handshake_opt(_nc,_random_clientID,_opts);
+    } else {
+        mg_send_mqtt_handshake_opt(_nc,client_id,_opts);
+    }
+
+
 }
 
 
