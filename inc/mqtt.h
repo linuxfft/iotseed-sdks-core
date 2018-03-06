@@ -23,6 +23,7 @@ extern "C" {
 #define IOTSEED_MG_EV_MQTT_PUBLISH      MG_EV_MQTT_PUBLISH
 #define IOTSEED_MG_EV_MQTT_DISCONNECT   MG_EV_MQTT_DISCONNECT
 #define IOTSEED_MG_EV_CLOSE             MG_EV_CLOSE
+#define IOTSEED_MG_EV_MQTT_PINGRESP     MG_EV_MQTT_PINGRESP
 
 #ifndef DEVICEID_MAX_LEN
 #define DEVICEID_MAX_LEN 63
@@ -136,6 +137,8 @@ IOTSEED_API ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_
 
 IOTSEED_API ST_RET iotseed_mqtt_connect_ssl(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handler_t handler, const char* ca_cert, const char* cert, const char* key);
 
+IOTSEED_API ST_VOID iotseed_mqtt_disconnect(void *nc);
+
 IOTSEED_API ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
 
 IOTSEED_API ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
@@ -150,6 +153,8 @@ IOTSEED_API IOTSEED_THREAD_ID iotseed_mg_start_thread(void *(*f)(void *), void *
 IOTSEED_API ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos);
 
 IOTSEED_API ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos);
+
+IOTSEED_API ST_VOID iotseed_mqtt_ping(void * nc);
 
 
 #ifdef __cplusplus

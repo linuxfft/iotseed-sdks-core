@@ -247,6 +247,10 @@ ST_RET iotseed_mqtt_connect(IOSSEED_MQTT_CONFIG *config, iotseed_mg_event_handle
     return SD_SUCCESS;
 }
 
+ST_VOID iotseed_mqtt_disconnect(void *nc){
+    mg_mqtt_disconnect((struct mg_connection*)nc); //try to send the DISCONNECT REQ
+}
+
 
 static ST_RET mqtt_wait_disconnect(IOSSEED_MQTT_CONFIG *config){
 
@@ -302,7 +306,7 @@ ST_RET iotseed_destory_mqtt_client(IOSSEED_MQTT_CONFIG *config){
 
 //no thread safe
 ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, const int msg_id, const int qos){
-    struct mg_connection * _nc = (struct mg_connection *)nc;
+    struct mg_connection *_nc = (struct mg_connection *)nc;
     if(nullptr == _nc)
         return SD_FAILURE;
     mg_mqtt_publish(_nc, topic, (uint16_t)msg_id, MG_MQTT_QOS(qos), msg,
@@ -312,7 +316,7 @@ ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const char *msg, co
 }
 
 ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos){
-    struct mg_connection * _nc = (struct mg_connection *)nc;
+    struct mg_connection *_nc = (struct mg_connection *)nc;
     struct mg_mqtt_topic_expression s_topic_expr = {topic, (uint8_t)qos};
 
     if(nullptr == nc || nullptr == topic){
@@ -325,6 +329,12 @@ ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id,
     return SD_SUCCESS;
 }
 
+
+
+ST_VOID iotseed_mqtt_ping(void * nc){
+    struct mg_connection *_nc = (struct mg_connection *)nc;
+    return mg_mqtt_ping(_nc);
+}
 
 
 

@@ -16,6 +16,8 @@ extern "C" {
 
 IOTSEED_API ST_VOID iotseed_msSleep(ST_LONG ms);
 
+IOTSEED_API ST_DOUBLE iotseed_get_current_ts(ST_VOID);
+
 #ifdef __cplusplus
 }
 #endif

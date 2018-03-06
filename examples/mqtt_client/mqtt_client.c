@@ -29,6 +29,10 @@ static char *s_token = NULL;
 
 static volatile int end = 0;
 
+static volatile double refresh_time = 0.0;
+
+#define KEEPALIVE_TIME_INTERVAL 5.0
+
 // set_recipe
 void fn_set_recipe(void *request, void *user_data)
 {
@@ -182,6 +186,10 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
             } else {
                 iotseed_set_disconnected(); //critical 必须设定为连接断开否则无法正常退出
             }
+            break;
+        case IOTSEED_MG_EV_MQTT_PINGRESP:
+            refresh_time = iotseed_get_current_ts();
+            break;
         case IOTSEED_MG_EV_MQTT_DISCONNECT:
             printf("Disconnect from Broker\n");
             if(!end){
@@ -189,6 +197,9 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
             } else {
                 iotseed_set_disconnected(); // critical 必须设定为连接断开否则无法正常退出
             }
+            break;
+        default:
+            break;
     }
 }
 
@@ -205,9 +216,12 @@ void *worker_thread_proc(void *param) {
     IOSSEED_MQTT_CONFIG *config = (IOSSEED_MQTT_CONFIG *) param;
 
     while (!end) {
-        char* msg = "demo data";
+        if(fabs(iotseed_get_current_ts() - refresh_time) > KEEPALIVE_TIME_INTERVAL){ //差５秒
+            iotseed_mqtt_disconnect(config->nc); //为了进入回调进行重连
+            continue;
+        }
         if (iotseed_is_connected()){
-            iotseed_mqtt_publish_msg(config->nc, "test/echo", msg, 16, MG_MQTT_QOS(0));
+            iotseed_mqtt_ping(config->nc);
         }
         iotseed_msSleep(1000);
     }
@@ -217,6 +231,8 @@ void *worker_thread_proc(void *param) {
 
 
 int main(int argc, char **argv) {
+
+    refresh_time = iotseed_get_current_ts();
 
     init_device_recipes(sDeviceId); //传入的是设备id
 
