@@ -202,7 +202,7 @@ ST_RET iotseed_create_mqtt_client(const IOSSEED_MQTT_CONFIG *config){
     }
     ST_RET ret = create_global_manager();
     if (ret < 0) {
-        printf("create global mgr manager fail\n");
+        fprintf(stderr, "create global mgr manager fail\n");
         return ret;
     }
 
@@ -325,8 +325,9 @@ ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id,
         fprintf(stderr,"mqtt Subscribing fail\n");
         return SD_FAILURE;
     }
-
+#ifdef IOTSEED_DEBUG
     printf("Subscribing to '%s'\n", topic);
+#endif
     mg_mqtt_subscribe(_nc, &s_topic_expr, 1, (uint16_t)msg_id);
     return SD_SUCCESS;
 }
