@@ -154,7 +154,7 @@ IOTSEED_API ST_RET iotseed_mqtt_publish_msg(void *nc, const char *topic, const c
 
 IOTSEED_API ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id, const int qos);
 
-IOTSEED_API ST_VOID iotseed_mqtt_ping(void * nc);
+//IOTSEED_API ST_VOID iotseed_mqtt_ping(void * nc);
 
 
 #ifdef __cplusplus

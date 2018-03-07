@@ -260,6 +260,8 @@ static ST_RET mqtt_wait_disconnect(IOSSEED_MQTT_CONFIG *config){
         mg_mqtt_disconnect((struct mg_connection*)(config->nc)); //try to send the DISCONNECT REQ
     }
 
+    iotseed_set_disconnected();
+
     //等待连接断开
     while(iotseed_is_connected() == true){
         iotseed_msSleep(100);
@@ -331,10 +333,10 @@ ST_RET iotseed_mqtt_subscribe_msg(void *nc, const char *topic, const int msg_id,
 
 
 
-ST_VOID iotseed_mqtt_ping(void * nc){
-    struct mg_connection *_nc = (struct mg_connection *)nc;
-    return mg_mqtt_ping(_nc);
-}
+//ST_VOID iotseed_mqtt_ping(void * nc){
+//    struct mg_connection *_nc = (struct mg_connection *)nc;
+//    return mg_mqtt_ping(_nc);
+//}
 
 
 

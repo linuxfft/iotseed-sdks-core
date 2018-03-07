@@ -14,14 +14,14 @@
 
 
 static const char *rootCAPath = "./mqtt-ca-server.pem";
-static const char *privateKeyPath = "mqtt-client1-key.pem";
-static const char *certificatePath = "./mqtt-client1.pem";
+static const char *privateKeyPath = "cb607660-185a-11e8-a1bc-ddd94133dd0a-client-key.pem";
+static const char *certificatePath = "./cb607660-185a-11e8-a1bc-ddd94133dd0a-client.pem";
 
 
-static const char *s_address = "mqtt.hub.cloudahead.net:38883"; // mqtt broker by CloudAhead
+static const char *s_address = "mqtt.hub.cloudahead.net:8883"; // mqtt broker by CloudAhead
 //static const char *s_address = "180.175.136.183:31883";
-static const char *sDeviceId = "deviceid";
-static const char *sAccessToken = "accesstoken";
+static const char *sDeviceId = "cb607660-185a-11e8-a1bc-ddd94133dd0a";
+static const char *sAccessToken = "Lz5sGPezYP0BVueyq1HY";
 
 static char *s_device_id = NULL;
 
@@ -29,9 +29,9 @@ static char *s_token = NULL;
 
 static volatile int end = 0;
 
-static volatile double refresh_time = 0.0;
-
-#define KEEPALIVE_TIME_INTERVAL 5.0
+//static volatile double refresh_time = 0.0;
+//
+//#define KEEPALIVE_TIME_INTERVAL 5.0
 
 // set_recipe
 void fn_set_recipe(void *request, void *user_data)
@@ -139,7 +139,7 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
             opts.access_token = config->sAccessToken;
 
             iotseed_mg_set_protocol_mqtt(nc);
-            iotseed_mg_send_mqtt_handshake_opt(nc, "iotseed", &opts);// 第二个参数为clientid, 请自行进行修改. 如clientid相同，将发生无法同时连接的问题.
+            iotseed_mg_send_mqtt_handshake_opt(nc, NULL, &opts);// 第二个参数为clientid, 请自行进行修改. 如clientid相同，将发生无法同时连接的问题.
             break;
         }
         case IOTSEED_MG_EV_MQTT_CONNACK:
@@ -147,12 +147,12 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
                 printf("Got mqtt connection error: %d\n", msg->connack_ret_code);
                 exit(1);
             }
+            iotseed_set_connected();
             int qos = MG_MQTT_QOS(0);
 
             for(int i = 0; i < config->topics_size; ++i){
                 iotseed_mqtt_subscribe_msg(config->nc,config->sub_topics[i],1000, qos);
             }
-            iotseed_set_connected();
             break;
         case IOTSEED_MG_EV_MQTT_PUBACK:
             printf("Message publishing acknowledged (msg_id: %d)\n", msg->message_id);
@@ -181,23 +181,15 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
         }
         case IOTSEED_MG_EV_CLOSE:
             printf("Connection closed\n");
-            if(!end){
-                iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath); //重新连接
-            } else {
-                iotseed_set_disconnected(); //critical 必须设定为连接断开否则无法正常退出
-            }
+            iotseed_set_disconnected(); //critical 必须设定为连接断开否则无法正常退出
             break;
-        case IOTSEED_MG_EV_MQTT_PINGRESP:
-            refresh_time = iotseed_get_current_ts();
-            break;
-        case IOTSEED_MG_EV_MQTT_DISCONNECT:
-            printf("Disconnect from Broker\n");
-            if(!end){
-                iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath); //重新连接
-            } else {
-                iotseed_set_disconnected(); // critical 必须设定为连接断开否则无法正常退出
-            }
-            break;
+//        case IOTSEED_MG_EV_MQTT_PINGRESP:
+//            refresh_time = iotseed_get_current_ts();
+//            break;
+//        case IOTSEED_MG_EV_MQTT_DISCONNECT:
+//            printf("Disconnect from Broker\n");
+//            iotseed_set_disconnected(); // critical 必须设定为连接断开否则无法正常退出
+//            break;
         default:
             break;
     }
@@ -216,13 +208,6 @@ void *worker_thread_proc(void *param) {
     IOSSEED_MQTT_CONFIG *config = (IOSSEED_MQTT_CONFIG *) param;
 
     while (!end) {
-        if(fabs(iotseed_get_current_ts() - refresh_time) > KEEPALIVE_TIME_INTERVAL){ //差５秒
-            iotseed_mqtt_disconnect(config->nc); //为了进入回调进行重连
-            continue;
-        }
-        if (iotseed_is_connected()){
-            iotseed_mqtt_ping(config->nc);
-        }
         iotseed_msSleep(1000);
     }
     return NULL;
@@ -232,15 +217,13 @@ void *worker_thread_proc(void *param) {
 
 int main(int argc, char **argv) {
 
-    refresh_time = iotseed_get_current_ts();
-
     init_device_recipes(sDeviceId); //传入的是设备id
 
     ST_RET ret;
 //    int msg_id = rand();
 
 //    char s_topic[256] = {0};
-    TOPIC sub_topics[2] = {"empoweriot/devices/23f901e0-ccc3-11e7-bf1a-59e9355b22c6/rpc/request/+","test/echo"};
+    TOPIC sub_topics[2] = {"empoweriot/devices/cb607660-185a-11e8-a1bc-ddd94133dd0a/rpc/request/+","test/echo"};
 
 #if !defined(_WIN32)
     signal(SIGTERM, signal_handler);
