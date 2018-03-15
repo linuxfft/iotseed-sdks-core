@@ -18,7 +18,7 @@ static const char *privateKeyPath = "cb607660-185a-11e8-a1bc-ddd94133dd0a-client
 static const char *certificatePath = "./cb607660-185a-11e8-a1bc-ddd94133dd0a-client.pem";
 
 
-static const char *s_address = "mqtt.hub.cloudahead.net:8883"; // mqtt broker by CloudAhead
+static const char *s_address = "test.mosquitto.org:1883"; // mqtt broker by mosquitto for test
 //static const char *s_address = "180.175.136.183:31883";
 static const char *sDeviceId = "cb607660-185a-11e8-a1bc-ddd94133dd0a";
 static const char *sAccessToken = "Lz5sGPezYP0BVueyq1HY";
@@ -135,11 +135,11 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
         case IOTSEED_MG_EV_CONNECT: {
             struct iotseed_mg_send_mqtt_handshake_opts opts;
             memset(&opts, 0, sizeof(opts));
-            opts.device_id = config->sDeviceId;
-            opts.access_token = config->sAccessToken;
+//            opts.device_id = config->sDeviceId;
+//            opts.access_token = config->sAccessToken;
 
             iotseed_mg_set_protocol_mqtt(nc);
-            iotseed_mg_send_mqtt_handshake_opt(nc, NULL, &opts);// 第二个参数为clientid, 请自行进行修改. 如clientid相同，将发生无法同时连接的问题.
+            iotseed_mg_send_mqtt_handshake_opt(nc, config->sDeviceId,NULL, &opts);// 第二个参数为clientid, 请自行进行修改. 如clientid相同，将发生无法同时连接的问题.
             break;
         }
         case IOTSEED_MG_EV_MQTT_CONNACK:
@@ -182,14 +182,21 @@ static void ev_handler(void *nc, int ev, void *p,void* user_data) {
         case IOTSEED_MG_EV_CLOSE:
             printf("Connection closed\n");
             iotseed_set_disconnected(); //critical 必须设定为连接断开否则无法正常退出
+            int ret = iotseed_mqtt_connect(config, ev_handler);
+
+            if(ret != SD_SUCCESS){
+                fprintf(stderr, "connect failed\n");
+                exit(1);
+            }
             break;
-//        case IOTSEED_MG_EV_MQTT_PINGRESP:
+        case IOTSEED_MG_EV_MQTT_PINGRESP:
+            printf("IOTSEED_MG_EV_MQTT_PINGRESP\n");
 //            refresh_time = iotseed_get_current_ts();
-//            break;
-//        case IOTSEED_MG_EV_MQTT_DISCONNECT:
-//            printf("Disconnect from Broker\n");
-//            iotseed_set_disconnected(); // critical 必须设定为连接断开否则无法正常退出
-//            break;
+            break;
+        case IOTSEED_MG_EV_MQTT_DISCONNECT:
+            printf("Disconnect from Broker\n");
+            iotseed_set_disconnected(); // critical 必须设定为连接断开否则无法正常退出
+            break;
         default:
             break;
     }
@@ -254,8 +261,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    registry_iotseed_recipe_rpc_method(RPC_METHOD_SETRECIPE, fn_set_recipe, config);
-    registry_iotseed_recipe_rpc_method(RPC_METHOD_ACTIVERECIPE, fn_active_recipe, config);
+//    registry_iotseed_recipe_rpc_method(RPC_METHOD_SETRECIPE, fn_set_recipe, config);
+//    registry_iotseed_recipe_rpc_method(RPC_METHOD_ACTIVERECIPE, fn_active_recipe, config);
 
     ret = iotseed_create_mqtt_client(config);
 
@@ -264,7 +271,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    ret = iotseed_mqtt_connect_ssl(config, ev_handler,rootCAPath,certificatePath,privateKeyPath);
+    ret = iotseed_mqtt_connect(config, ev_handler);
 
     if(ret != SD_SUCCESS){
         fprintf(stderr, "connect failed\n");
@@ -278,7 +285,7 @@ int main(int argc, char **argv) {
     while (!end){
         //critical 
         if (iotseed_is_connected()){
-//            iotseed_mqtt_publish_msg(config->nc, "empower234sts", "demo data master process", 16, MG_MQTT_QOS(0));
+            iotseed_mqtt_publish_msg(config->nc, "test/echo", "demo data master process", 16, MG_MQTT_QOS(0));
         }
         iotseed_msSleep(1000);
     }

@@ -141,7 +141,7 @@ IOTSEED_API ST_VOID iotseed_mqtt_disconnect(void *nc);
 
 IOTSEED_API ST_VOID iotseed_mg_set_protocol_mqtt(void *nc);
 
-IOTSEED_API ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
+IOTSEED_API ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *device_id, const char *client_id,
                                                   struct iotseed_mg_send_mqtt_handshake_opts* opts);
 
 

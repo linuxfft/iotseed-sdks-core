@@ -53,10 +53,23 @@ ST_VOID iotseed_mg_set_protocol_mqtt(void *nc){
     mg_set_protocol_mqtt(_nc);
 }
 
-ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *client_id,
+ST_VOID iotseed_mg_send_mqtt_handshake_opt(void *nc, const char *device_id, const char *client_id,
                                 struct iotseed_mg_send_mqtt_handshake_opts* opts){
     struct mg_connection * _nc = (struct mg_connection *)nc;
     struct mg_send_mqtt_handshake_opts _opts = *(struct mg_send_mqtt_handshake_opts*)opts;
+    std::string _s_topic;
+
+    assert(device_id != nullptr);
+
+    if(opts->will_topic == nullptr){
+        _s_topic += "/empoweriot/disconnect/";
+        _s_topic += std::string(device_id);
+        opts->will_topic = _s_topic.c_str();
+    }
+
+    if(opts->will_message == nullptr){
+        opts->will_message = device_id;
+    }
 
     char _random_clientID[36];
 
