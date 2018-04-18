@@ -27,8 +27,8 @@ FIND_PACKAGE (Threads REQUIRED)
 
 if(MSVC)
 else()
-	set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-	set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+	set(CMAKE_THREAD_PREFER_PTHREAD ON)
+	set(THREADS_PREFER_PTHREAD_FLAG ON)
 message(${CMAKE_THREAD_LIBS_INIT})
 endif()
 
@@ -48,5 +48,5 @@ set(SOURCE_FILES lib/mongoose/mongoose.c src/mqtt.cpp src/str_utils.cpp src/log.
 add_library(iotseed_sdks_core SHARED ${SOURCE_FILES})
 #SET_TARGET_PROPERTIES(iotseed_sdks_core PROPERTIES OUTPUT_NAME "iotseed_sdks_core_static")
 #add_library(iotseed_sdks_core_static STATIC ${SOURCE_FILES})
-target_link_libraries (iotseed_sdks_core ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (iotseed_sdks_core Threads::Threads)
 target_link_libraries (iotseed_sdks_core ${OPENSSL_LIBRARIES})
